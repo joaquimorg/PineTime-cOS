@@ -1,0 +1,21 @@
+# CMake
+_build
+
+# Resulting binary files
+*.a
+*.so
+*.s
+*.hex
+*.bin
+*.map
+*.out
+
+# Linux
+**/.directory
+**/*.swp
+
+# OSX/MacOS
+**/.DS_Store
+
+# Windows
+**/thumbs.db
