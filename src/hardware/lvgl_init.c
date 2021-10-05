@@ -6,6 +6,7 @@
 #include "nrf_gpio.h"
 #include "st7789.h"
 #include "cst816.h"
+#include "lv_theme_pinetime.h"
 
 #define DISP_HOR_RES 240
 #define DISP_VER_RES 240
@@ -40,6 +41,19 @@ void lvgl_init(void) {
     // Finally register the driver
     lv_disp_drv_register(&disp_drv);
 
+    /*Initialize the new theme from the current theme*/
+    lv_theme_t * th_act = lv_disp_get_theme(lv_disp_get_default());
+    static lv_theme_t th_pinetime;
+    th_pinetime = *th_act;
+
+    /*Set the parent theme ans the style applay callback for the new theme*/
+    lv_theme_set_parent(&th_pinetime, th_act);
+
+    lv_theme_pinetime_init(&th_pinetime);
+
+    /*Assign the new theme the the current display*/
+    lv_disp_set_theme(lv_disp_get_default(), &th_pinetime);
+
     //
 
     static lv_indev_drv_t indev_drv;
@@ -71,10 +85,16 @@ static void touchpad_read(lv_indev_drv_t* drv, lv_indev_data_t* data) {
 
     cst816Get();
 
-    data->state = (tsData.event == 2) ? LV_INDEV_STATE_PR : LV_INDEV_STATE_REL;
+    bool touched = (tsData.event == 2);
 
-    /*Set the last pressed coordinates*/
-    data->point.x = tsData.xpos;
-    data->point.y = tsData.ypos;
+    if (!touched) {
+        data->state = LV_INDEV_STATE_REL;
+    } else {
+        data->state = LV_INDEV_STATE_PR;
+
+        /*Set the coordinates*/
+        data->point.x = tsData.xpos;
+        data->point.y = tsData.ypos;
+    }
 
 }
