@@ -2,7 +2,10 @@ PROJECT_NAME     := pinetime-cos
 TARGETS          := pinetime-cos
 OUTPUT_DIRECTORY := _build
 
-SDK_ROOT := /mnt/d/Work/PineTime/nRF5_SDK_17.1.0_ddde560
+NRFUTIL := d:/Work/Pinetime/nRF52832/nrfutil
+#SDK_ROOT := /mnt/d/Work/PineTime/nRF5_SDK_17.1.0_ddde560
+SDK_ROOT := d:/Work/PineTime/nRF5_SDK_17.1.0_ddde560
+
 PROJ_DIR := ./src
 
 $(OUTPUT_DIRECTORY)/pinetime-cos.out: \
@@ -77,6 +80,8 @@ SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_spi.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_spim.c \
   $(PROJ_DIR)/hardware/spi_master2.c \
+  $(PROJ_DIR)/hardware/st7789.c \
+  $(PROJ_DIR)/hardware/lvgl_init.c \
   $(PROJ_DIR)/main.c \
 
 # Include folders common to all targets
@@ -209,6 +214,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/external/freertos/portable/GCC/nrf52 \
   $(PROJ_DIR)/hardware \
 
+include MakefileV8.lvgl
 
 # Libraries common to all targets
 LIB_FILES += \
@@ -270,10 +276,10 @@ LDFLAGS += -Wl,--gc-sections
 # use newlib in nano version
 LDFLAGS += --specs=nano.specs
 
-pinetime-cos: CFLAGS += -D__HEAP_SIZE=8192
-pinetime-cos: CFLAGS += -D__STACK_SIZE=8192
-pinetime-cos: ASMFLAGS += -D__HEAP_SIZE=8192
-pinetime-cos: ASMFLAGS += -D__STACK_SIZE=8192
+pinetime-cos: CFLAGS += -D__HEAP_SIZE=0x1000
+pinetime-cos: CFLAGS += -D__STACK_SIZE=0x1000
+pinetime-cos: ASMFLAGS += -D__HEAP_SIZE=0x1000
+pinetime-cos: ASMFLAGS += -D__STACK_SIZE=0x1000
 
 # Add standard libraries at the very end of the linker input, after all objects
 # that may need symbols provided by these libraries.
@@ -298,7 +304,7 @@ include $(TEMPLATE_PATH)/Makefile.common
 $(foreach target, $(TARGETS), $(call define_target, $(target)))
 
 softdevice:
-	nrfutil settings generate --family NRF52 --application $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).hex --app-boot-validation VALIDATE_GENERATED_CRC --application-version 0xff --bootloader-version 0xff --bl-settings-version 2 $(OUTPUT_DIRECTORY)/dfu_settings.hex
+	$(NRFUTIL) settings generate --family NRF52 --application $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).hex --app-boot-validation VALIDATE_GENERATED_CRC --application-version 0xff --bootloader-version 0xff --bl-settings-version 2 $(OUTPUT_DIRECTORY)/dfu_settings.hex
 	python scripts/hexmerge.py --overlap=replace $(SDK_ROOT)/components/softdevice/s132/hex/s132_nrf52_7.2.0_softdevice.hex bootloader/bootloader_pinetime-cos.hex $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).hex $(OUTPUT_DIRECTORY)/dfu_settings.hex -o $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).app.hex
 	arm-none-eabi-gdb.exe --batch -ex="target extended-remote 192.168.1.20:3333" -ex "load" -ex "monitor reset" $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).app.hex
 
