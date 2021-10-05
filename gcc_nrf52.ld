@@ -14,7 +14,7 @@ MEMORY
    * - Concurrent connection peripheral + central + secure links
    * - Event Len, HVN queue, Write CMD queue
    */ 
-  RAM (rwx) :  ORIGIN = 0x20003600, LENGTH = 0x20010000 - 0x20003600
+  RAM (rwx) :  ORIGIN = 0x20003800, LENGTH = 0x20010000 - 0x20003800
   
   uicr_bootloader_start_address (r) : ORIGIN = 0x10001014, LENGTH = 0x4
 }

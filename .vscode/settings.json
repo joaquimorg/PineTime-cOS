@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.sql": "oracle",
+        "nrf_ble.h": "c"
+    }
+}

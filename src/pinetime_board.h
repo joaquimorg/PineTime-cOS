@@ -16,5 +16,12 @@
 #define SPI_MOSI 3
 #define SPI_MISO 4
 
+#define TWI_SCL 7
+#define TWI_SDA 6
+
+#define TP_TWI_ADDR 0x15
+#define TP_IRQ 28
+#define TP_RST 10
+
 
 #endif // PINETIME_BOARD_H
