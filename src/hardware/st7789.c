@@ -42,7 +42,7 @@ struct st7789_cmd {
 const static struct st7789_cmd st7789_init_data[] = {
     //{SWRESET, NULL},
     //{SLPOUT, NULL},
-    {COLMOD, (uint8_t *)"\x55", 1}, // MCU will send 16-bit RGB565
+    {COLMOD, (uint8_t *)"\x55", 1}, // MCU will send 16-bit RGB565 = 55 / 12-bit = 53
     {MADCTL, (uint8_t *)"\x00", 1}, // Left to right, top to bottom
     {PORCTRL, (uint8_t *)"\x0C\x0C\x00\x33\x33", 5},
     {GCTRL, (uint8_t *)"\x45", 1},
@@ -79,10 +79,6 @@ void st7789_send(uint8_t cmd, const uint8_t *data, unsigned len) {
 
 void st7789_init(void) {
 
-    // Backlight
-    nrf_gpio_pin_clear(LCD_LIGHT_1);
-    nrf_gpio_cfg_output(LCD_LIGHT_1);
-    
     nrf_gpio_pin_set(LCD_DC);
     nrf_gpio_pin_set(LCD_CSN);
     //nrf_gpio_pin_set(SPI_MOSI);

@@ -6093,7 +6093,7 @@
  
 
 #ifndef APP_GPIOTE_ENABLED
-#define APP_GPIOTE_ENABLED 0
+#define APP_GPIOTE_ENABLED 1
 #endif
 
 // <q> APP_PWM_ENABLED  - app_pwm - PWM functionality
@@ -7428,7 +7428,7 @@
  
 
 #ifndef BUTTON_ENABLED
-#define BUTTON_ENABLED 1
+#define BUTTON_ENABLED 0
 #endif
 
 // <q> BUTTON_HIGH_ACCURACY_ENABLED  - Enables GPIOTE high accuracy for buttons

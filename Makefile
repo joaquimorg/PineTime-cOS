@@ -32,12 +32,14 @@ include MakefileV8.lvgl
 SRC_FILES += \
   $(PROJ_DIR)/sys/sys.c \
   $(PROJ_DIR)/hardware/watchdog.c \
+  $(PROJ_DIR)/hardware/backlight.c \
   $(PROJ_DIR)/hardware/rtc.c \
   $(PROJ_DIR)/hardware/spi_master2.c \
   $(PROJ_DIR)/hardware/st7789.c \
   $(PROJ_DIR)/hardware/cst816.c \
   $(PROJ_DIR)/hardware/lvgl_init.c \
   $(PROJ_DIR)/theme/lv_theme_pinetime.c \
+  $(PROJ_DIR)/theme/lv_font_clock_42.c \
   $(PROJ_DIR)/apps/app.c \
   $(PROJ_DIR)/nrf_ble/nrf_ble.c \
   $(PROJ_DIR)/main.c \

@@ -65,6 +65,7 @@ SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_spi.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_spim.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_wdt.c \
+  $(SDK_ROOT)/components/libraries/gpiote/app_gpiote.c \
   
 
 INC_FOLDERS += \

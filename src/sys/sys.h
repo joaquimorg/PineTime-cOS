@@ -25,5 +25,11 @@ struct pinetimecOS pinetimecos;
 
 void sys_init(void);
 
+bool battery_is_powered(void);
+bool battery_is_charging(void);
+
+void display_on(void);
+void display_off(void);
+
 
 #endif // _SYS_H
