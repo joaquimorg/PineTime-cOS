@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "FreeRTOS.h"
+#include "queue.h"
 
 enum appMessages {
      GoToSleep              = 0x01,
@@ -16,7 +17,6 @@ enum appMessages {
 QueueHandle_t appMsgQueue;
 #define QUEUESIZE   10
 #define ITEMSIZE    1
-
 
 
 void main_app(void* pvParameter);

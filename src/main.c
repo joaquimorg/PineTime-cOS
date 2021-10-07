@@ -10,22 +10,10 @@
 #include "nrf_log_default_backends.h"
 #include "app_error.h"
 #include "app_error_weak.h"
-
-#include "nrf_ble.h"
-
-/* FreeRTOS related */
 #include "FreeRTOS.h"
 #include "task.h"
-#include "semphr.h"
-
 #include "pinetime_board.h"
-#include "lvgl.h"
-#include "lvgl_init.h"
-#include "app.h"
-
-#define SYS_TASK_DELAY        1 
-TaskHandle_t  sys_task_handle;
-TaskHandle_t  app_task_handle;
+#include "sys.h"
 
 // ---------------------------------------------------------------------------------------------------------
 
@@ -72,22 +60,6 @@ void app_error_handler_bare(uint32_t error_code) {
 
 // ---------------------------------------------------------------------------------------------------------
 
-static void sys_task_function(void* pvParameter)
-{
-    UNUSED_PARAMETER(pvParameter);
-
-    UNUSED_VARIABLE(xTaskCreate(main_app, "APP", configMINIMAL_STACK_SIZE + 600, NULL, 3, &app_task_handle));
-
-    while (true)
-    {
-        vTaskDelay(SYS_TASK_DELAY);
-        lv_tick_inc(SYS_TASK_DELAY);
-        lv_timer_handler();
-        
-        /* Tasks must be implemented to never return... */
-    }
-}
-
 void vApplicationIdleHook(void) {
 
 }
@@ -95,6 +67,7 @@ void vApplicationIdleHook(void) {
 static void clock_init(void) {
     ret_code_t err_code = nrf_drv_clock_init();
     APP_ERROR_CHECK(err_code);
+    nrf_drv_clock_lfclk_request(NULL);
 }
 
 
@@ -113,11 +86,7 @@ int main(void)
     log_init();
     clock_init();
 
-    lvgl_init();
-
-    UNUSED_VARIABLE(xTaskCreate(sys_task_function, "SYS", configMINIMAL_STACK_SIZE + 200, NULL, 3, &sys_task_handle));
-
-    nrf_ble_init();
+    sys_init();
 
     // Start FreeRTOS scheduler.
     vTaskStartScheduler();

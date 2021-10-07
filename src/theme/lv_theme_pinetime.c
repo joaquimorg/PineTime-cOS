@@ -50,8 +50,8 @@ static void style_init(void)
     style_init_reset(&styles->scr);
     lv_style_set_bg_opa(&styles->scr, LV_OPA_COVER);
     //lv_style_set_bg_color(&styles->scr, COLOR_WHITE);
-    lv_style_set_bg_color(&styles->scr, lv_color_black());
-    lv_style_set_text_color(&styles->scr, COLOR_DIM);
+    lv_style_set_bg_color(&styles->scr, lv_color_make(0x0, 0x0, 0x0));
+    lv_style_set_text_color(&styles->scr, COLOR_WHITE);
     lv_style_set_pad_row(&styles->scr, PAD_DEF / 2);
     lv_style_set_pad_column(&styles->scr, PAD_DEF / 2);
 
@@ -68,12 +68,14 @@ static void style_init(void)
     lv_style_set_arc_color(&styles->light, COLOR_MID);
 
     style_init_reset(&styles->dark);
+    lv_style_set_radius(&styles->dark, 12);
+    lv_style_set_text_color(&styles->dark, lv_color_make(0x0, 0x0, 0x0));
     lv_style_set_bg_opa(&styles->dark, LV_OPA_COVER);
     lv_style_set_bg_color(&styles->dark, COLOR_DARK);
     lv_style_set_border_color(&styles->dark, COLOR_DIM);
     lv_style_set_border_width(&styles->dark, 1);
-    lv_style_set_pad_all(&styles->dark, PAD_DEF);
-    lv_style_set_pad_gap(&styles->dark, PAD_DEF / 2);
+    lv_style_set_pad_all(&styles->dark, 8);
+    lv_style_set_pad_gap(&styles->dark, 8);
     lv_style_set_line_width(&styles->dark, LV_DPX(2));
     lv_style_set_line_color(&styles->dark, COLOR_DIM);
     lv_style_set_arc_width(&styles->dark, LV_DPX(2));

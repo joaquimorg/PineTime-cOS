@@ -30,6 +30,9 @@ include MakefileV8.lvgl
 
 # Source
 SRC_FILES += \
+  $(PROJ_DIR)/sys/sys.c \
+  $(PROJ_DIR)/hardware/watchdog.c \
+  $(PROJ_DIR)/hardware/rtc.c \
   $(PROJ_DIR)/hardware/spi_master2.c \
   $(PROJ_DIR)/hardware/st7789.c \
   $(PROJ_DIR)/hardware/cst816.c \
@@ -42,10 +45,12 @@ SRC_FILES += \
 
 # Include
 INC_FOLDERS += \
+  $(PROJ_DIR)/sys \
   $(PROJ_DIR)/nrf_ble \
-  $(PROJ_DIR)/apps \
   $(PROJ_DIR)/hardware \
   $(PROJ_DIR)/theme \
+  $(PROJ_DIR)/apps \
+
   
 
 # --------------------------------------------------------------------
@@ -83,7 +88,7 @@ CFLAGS += -fno-builtin -fshort-enums
 # C++ flags common to all targets
 CXXFLAGS += $(OPT)
 # Assembler flags common to all targets
-ASMFLAGS += -g3
+#ASMFLAGS += -g3
 ASMFLAGS += -mcpu=cortex-m4
 ASMFLAGS += -mthumb -mabi=aapcs
 ASMFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16

@@ -9,6 +9,7 @@ _build
 *.bin
 *.map
 *.out
+!bootloader/*.hex
 
 # Linux
 **/.directory

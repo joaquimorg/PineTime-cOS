@@ -58,7 +58,7 @@
 #define configUSE_PREEMPTION 1
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
 #define configUSE_TICKLESS_IDLE 1
-#define configUSE_TICKLESS_IDLE_SIMPLE_DEBUG                                      1 /* See into vPortSuppressTicksAndSleep source code for explanation */
+#define configUSE_TICKLESS_IDLE_SIMPLE_DEBUG                                      0 /* See into vPortSuppressTicksAndSleep source code for explanation */
 #define configCPU_CLOCK_HZ                                                        ( SystemCoreClock )
 #define configTICK_RATE_HZ                                                        1024
 #define configMAX_PRIORITIES                                                      ( 3 )
@@ -78,7 +78,7 @@
 #define configENABLE_BACKWARD_COMPATIBILITY                                       1
 
 /* Hook function related definitions. */
-#define configUSE_IDLE_HOOK                                                       1
+#define configUSE_IDLE_HOOK                                                       0
 #define configUSE_TICK_HOOK                                                       0
 #define configCHECK_FOR_STACK_OVERFLOW                                            0
 #define configUSE_MALLOC_FAILED_HOOK                                              0
@@ -94,9 +94,9 @@
 
 /* Software timer definitions. */
 #define configUSE_TIMERS 1
-#define configTIMER_TASK_PRIORITY                                                 ( 2 )
+#define configTIMER_TASK_PRIORITY                                                 ( 0 )
 #define configTIMER_QUEUE_LENGTH                                                  32
-#define configTIMER_TASK_STACK_DEPTH                                              ( 600 )
+#define configTIMER_TASK_STACK_DEPTH                                              ( 300 )
 
 /* Tickless Idle configuration. */
 #define configEXPECTED_IDLE_TIME_BEFORE_SLEEP                                     2

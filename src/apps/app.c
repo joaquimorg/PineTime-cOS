@@ -8,35 +8,35 @@
 
 #include "app.h"
 #include "lvgl.h"
+#include "rtc.h"
 
 
 #define APP_TASK_DELAY        50
 
+lv_obj_t *time_text;
+UTCTimeStruct time_tmp;
+lv_timer_t * timer;
+
+void update_time(lv_timer_t * timer) {
+    get_UTC_time(&time_tmp);
+    lv_label_set_text_fmt(time_text, "%02i:%02i:%02i", time_tmp.hour, time_tmp.minutes, time_tmp.seconds);
+}
 
 void lv_example(void)
 {
-    //lv_obj_remove_style_all(lv_scr_act());
-    //lv_disp_set_bg_color(lv_disp_get_default(), lv_color_black());
 
-    lv_obj_t * label1 = lv_label_create(lv_scr_act());
-    lv_label_set_text(label1, "PineTime-cOS");
-    lv_obj_set_style_text_font(label1, &lv_font_montserrat_32, 0);
-    //lv_obj_set_style_text_color(label1, lv_color_white(), 0);
-    lv_obj_set_style_text_align(label1, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_align(label1, LV_ALIGN_TOP_MID, 0, 0);
+    time_text = lv_label_create(lv_scr_act());
+    
+    get_UTC_time(&time_tmp);
 
-    lv_obj_t * spinner = lv_spinner_create(lv_scr_act(), 1000, 100);
-    lv_obj_set_size(spinner, 120, 120);
-    lv_obj_center(spinner);
+    lv_obj_set_style_text_font(time_text, &lv_font_montserrat_32, 0);
+    
+    lv_label_set_text_fmt(time_text, "%02i:%02i:%02i", time_tmp.hour, time_tmp.minutes, time_tmp.seconds);
+    lv_obj_set_style_text_align(time_text, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align(time_text, LV_ALIGN_CENTER, 0, 0);
 
-    lv_obj_t * btn2 = lv_btn_create(lv_scr_act());    
-    lv_obj_align(btn2, LV_ALIGN_CENTER, 0, 85);
-    lv_obj_add_flag(btn2, LV_OBJ_FLAG_CHECKABLE);
-    lv_obj_set_height(btn2, LV_SIZE_CONTENT);
-    label1 = lv_label_create(btn2);
-    //lv_obj_set_style_text_color(label1, lv_color_black(), 0);
-    lv_label_set_text(label1, "Toggle");
-    lv_obj_center(label1);
+    timer = lv_timer_create(update_time, 1000, NULL);
+    lv_timer_ready(timer);
 }
 
 
