@@ -31,6 +31,7 @@ include MakefileV8.lvgl
 # Source
 SRC_FILES += \
   $(PROJ_DIR)/sys/sys.c \
+  $(PROJ_DIR)/sys/utils.c \
   $(PROJ_DIR)/hardware/watchdog.c \
   $(PROJ_DIR)/hardware/backlight.c \
   $(PROJ_DIR)/hardware/rtc.c \
@@ -40,9 +41,14 @@ SRC_FILES += \
   $(PROJ_DIR)/hardware/lvgl_init.c \
   $(PROJ_DIR)/theme/lv_theme_pinetime.c \
   $(PROJ_DIR)/theme/lv_font_clock_42.c \
+  $(PROJ_DIR)/theme/lv_font_clock_90.c \
   $(PROJ_DIR)/apps/app.c \
   $(PROJ_DIR)/nrf_ble/nrf_ble.c \
   $(PROJ_DIR)/main.c \
+
+# APPS
+SRC_FILES += \
+  $(PROJ_DIR)/apps/app/clock.c \
 
 
 # Include
@@ -52,6 +58,7 @@ INC_FOLDERS += \
   $(PROJ_DIR)/hardware \
   $(PROJ_DIR)/theme \
   $(PROJ_DIR)/apps \
+  $(PROJ_DIR)/apps/app \
 
   
 
@@ -67,6 +74,7 @@ OPT = -Os -g3
 
 # C flags common to all targets
 CFLAGS += $(OPT)
+#CFLAGS += -DDEBUG 
 #CFLAGS += -DAPP_TIMER_V2
 #CFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
 CFLAGS += -DBOARD_PCA10040
@@ -86,9 +94,11 @@ CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # keep every function in a separate section, this allows linker to discard unused ones
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
 CFLAGS += -fno-builtin -fshort-enums
+#CFLAGS += -Wstack-usage=48
 
 # C++ flags common to all targets
 CXXFLAGS += $(OPT)
+#ASMFLAGS += -DDEBUG
 # Assembler flags common to all targets
 #ASMFLAGS += -g3
 ASMFLAGS += -mcpu=cortex-m4
@@ -116,11 +126,12 @@ LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 LDFLAGS += -Wl,--gc-sections
 # use newlib in nano version
 LDFLAGS += --specs=nano.specs
+LDFLAGS += -fstack-usage
 
-pinetime-cos: CFLAGS += -D__HEAP_SIZE=0x2000
-pinetime-cos: CFLAGS += -D__STACK_SIZE=0x2000
-pinetime-cos: ASMFLAGS += -D__HEAP_SIZE=0x2000
-pinetime-cos: ASMFLAGS += -D__STACK_SIZE=0x2000
+pinetime-cos: CFLAGS += -D__HEAP_SIZE=0x2600
+pinetime-cos: CFLAGS += -D__STACK_SIZE=0x1600
+pinetime-cos: ASMFLAGS += -D__HEAP_SIZE=0x2600
+pinetime-cos: ASMFLAGS += -D__STACK_SIZE=0x1600
 
 # Add standard libraries at the very end of the linker input, after all objects
 # that may need symbols provided by these libraries.

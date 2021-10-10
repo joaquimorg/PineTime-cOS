@@ -60,10 +60,6 @@ void app_error_handler_bare(uint32_t error_code) {
 
 // ---------------------------------------------------------------------------------------------------------
 
-void vApplicationIdleHook(void) {
-
-}
-
 static void clock_init(void) {
     ret_code_t err_code = nrf_drv_clock_init();
     APP_ERROR_CHECK(err_code);

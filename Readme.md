@@ -20,4 +20,7 @@ $ git clone --recurse-submodules https://github.com/joaquimorg/PineTime-cOS.git
 
 
 arm-none-eabi-gdb.exe -ex="target extended-remote 192.168.1.20:3333" .\_build\pinetime-cos.out
+
 b lv_log.c:69
+
+b nrf_log_frontend.c:602

@@ -31,9 +31,9 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
-
+#include "sys.h"
 #include "app.h"
-#include "pinetime_board.h"
+#include "utils.h"
 
 #define SYS_TASK_DELAY        1 
 TaskHandle_t  sys_task_handle;
@@ -42,6 +42,7 @@ TaskHandle_t  app_task_handle;
 // ---------------------------------------------------------------------------------------------------------
 
 #define APP_BLE_CONN_CFG_TAG            1  
+#define APP_FEATURE_NOT_SUPPORTED       BLE_GATT_STATUS_ATTERR_APP_BEGIN + 2
 
 #define DEVICE_NAME                     "PineTime-cOS"                         /**< Name of device. Will be included in the advertising data. */
 #define NUS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
@@ -75,6 +76,9 @@ static ble_uuid_t m_adv_uuids[] =                                          /**< 
     {BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}
 };
 
+uint8_t inputEnd = 1, inputSize = 0;
+uint16_t msgSize = 0;
+
 static void advertising_start(void* p_context);
 
 static void gap_params_init(void) {
@@ -107,8 +111,41 @@ static void nrf_qwr_error_handler(uint32_t nrf_error) {
 
 static void nus_data_handler(ble_nus_evt_t* p_evt) {
 
-    if (p_evt->type == BLE_NUS_EVT_RX_DATA)
-    {
+    uint8_t msgType = 0;
+    uint8_t msgStart = 0;
+
+    if (p_evt->type == BLE_NUS_EVT_RX_DATA) {
+        //NRF_LOG_DEBUG("Received data from BLE NUS.");
+        //NRF_LOG_HEXDUMP_DEBUG(p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
+
+        // criar um buffer para juntar todo o que foi enviado 
+
+        // rx[0] = 0x01 - init
+        // rx[1] = 0xxx - message type
+        // rx[2] = 0x00 - message size
+        // rx[3] = 0x00 - message size - header
+        // rx[4] = 0xxx - message
+        // rx[..] = 0xxx - message
+
+        // New Message ?
+        if ( inputEnd == 1 && p_evt->params.rx_data.p_data[0] == COMMAND_BASE ) {
+            inputEnd = 0;
+            msgType = p_evt->params.rx_data.p_data[1];
+            msgSize = p_evt->params.rx_data.p_data[2];            
+            msgStart = 4;
+        }
+
+        for (uint32_t i = msgStart; i < p_evt->params.rx_data.length; i++) {
+            inputBuffer[inputSize++] = p_evt->params.rx_data.p_data[i];
+        }
+
+        if ( inputSize >= msgSize && inputEnd == 0 ) {
+            inputEnd = 1;
+            // call function to evalute received msg
+            ble_command(msgType);
+            inputSize = 0;
+        }
+        //UNUSED_PARAMETER(msgType);
         
     }
 
@@ -195,6 +232,9 @@ static void ble_evt_handler(ble_evt_t const* p_ble_evt, void* p_context) {
             //lcd_print(10, 100, "BLE ON", RGB2COLOR(0, 0, 255));
             //err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
             //APP_ERROR_CHECK(err_code);
+            pinetimecos.bluetoothState = StatusON;
+            app_push_message(UpdateBleConnection);
+            app_push_message(WakeUp);
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             err_code = nrf_ble_qwr_conn_handle_assign(&m_qwr, m_conn_handle);
             APP_ERROR_CHECK(err_code);
@@ -204,6 +244,9 @@ static void ble_evt_handler(ble_evt_t const* p_ble_evt, void* p_context) {
             //NRF_LOG_INFO("Disconnected");
             //lcd_print(10, 100, "BLE OFF", RGB2COLOR(255, 0, 0));
             // LED indication will be changed when advertising starts.
+            pinetimecos.bluetoothState = StatusOFF;
+            app_push_message(UpdateBleConnection);
+            app_push_message(WakeUp);
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
             break;
 
@@ -231,6 +274,16 @@ static void ble_evt_handler(ble_evt_t const* p_ble_evt, void* p_context) {
             APP_ERROR_CHECK(err_code);
             break;
 
+        case BLE_GAP_EVT_DATA_LENGTH_UPDATE_REQUEST:
+        {
+            ble_gap_data_length_params_t dl_params;
+
+            // Clearing the struct will effectively set members to @ref BLE_GAP_DATA_LENGTH_AUTO.
+            memset(&dl_params, 0, sizeof(ble_gap_data_length_params_t));
+            err_code = sd_ble_gap_data_length_update(p_ble_evt->evt.gap_evt.conn_handle, &dl_params, NULL);
+            APP_ERROR_CHECK(err_code);
+        } break;
+        
         case BLE_GATTC_EVT_TIMEOUT:
             // Disconnect on GATT Client timeout event.
             err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gattc_evt.conn_handle,
@@ -244,6 +297,35 @@ static void ble_evt_handler(ble_evt_t const* p_ble_evt, void* p_context) {
                 BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
             APP_ERROR_CHECK(err_code);
             break;
+
+        case BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST:
+        {
+            ble_gatts_evt_rw_authorize_request_t  req;
+            ble_gatts_rw_authorize_reply_params_t auth_reply;
+
+            req = p_ble_evt->evt.gatts_evt.params.authorize_request;
+
+            if (req.type != BLE_GATTS_AUTHORIZE_TYPE_INVALID)
+            {
+                if ((req.request.write.op == BLE_GATTS_OP_PREP_WRITE_REQ)     ||
+                    (req.request.write.op == BLE_GATTS_OP_EXEC_WRITE_REQ_NOW) ||
+                    (req.request.write.op == BLE_GATTS_OP_EXEC_WRITE_REQ_CANCEL))
+                {
+                    if (req.type == BLE_GATTS_AUTHORIZE_TYPE_WRITE)
+                    {
+                        auth_reply.type = BLE_GATTS_AUTHORIZE_TYPE_WRITE;
+                    }
+                    else
+                    {
+                        auth_reply.type = BLE_GATTS_AUTHORIZE_TYPE_READ;
+                    }
+                    auth_reply.params.write.gatt_status = APP_FEATURE_NOT_SUPPORTED;
+                    err_code = sd_ble_gatts_rw_authorize_reply(p_ble_evt->evt.gatts_evt.conn_handle,
+                                                               &auth_reply);
+                    APP_ERROR_CHECK(err_code);
+                }
+            }
+        } break; // BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST
 
         default:
             // No implementation needed.
@@ -275,11 +357,12 @@ void gatt_evt_handler(nrf_ble_gatt_t* p_gatt, nrf_ble_gatt_evt_t const* p_evt) {
     if ((m_conn_handle == p_evt->conn_handle) && (p_evt->evt_id == NRF_BLE_GATT_EVT_ATT_MTU_UPDATED))
     {
         m_ble_nus_max_data_len = p_evt->params.att_mtu_effective - OPCODE_LENGTH - HANDLE_LENGTH;
-        NRF_LOG_INFO("Data len is set to 0x%X(%d)", m_ble_nus_max_data_len, m_ble_nus_max_data_len);
+        //NRF_LOG_INFO("Data len is set to 0x%X(%d)", m_ble_nus_max_data_len, m_ble_nus_max_data_len);
+         
     }
-    NRF_LOG_DEBUG("ATT MTU exchange completed. central 0x%x peripheral 0x%x",
+    /*NRF_LOG_DEBUG("ATT MTU exchange completed. central 0x%x peripheral 0x%x",
         p_gatt->att_mtu_desired_central,
-        p_gatt->att_mtu_desired_periph);
+        p_gatt->att_mtu_desired_periph);*/
 }
 
 void gatt_init(void) {

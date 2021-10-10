@@ -8,143 +8,106 @@
 
 #include "app.h"
 #include "sys.h"
+#include "utils.h"
 #include "lvgl.h"
 #include "rtc.h"
 
-
-#define APP_TASK_DELAY          10
-#define APP_TASK_DELAY_SLEEP    100
+#include "clock.h"
 
 
-static void anim_x_cb(void * var, int32_t v)
-{
-    lv_obj_set_x(var, v);
-}
-/*
-static void anim_size_cb(void * var, int32_t v)
-{
-    lv_obj_set_size(var, v, v);
-}
-*/
-/**
- * Create a playback animation
- */
-void lv_example_anim_2(void)
-{
+#define APP_TASK_DELAY          pdMS_TO_TICKS( 5 )
+#define APP_TASK_DELAY_SLEEP    pdMS_TO_TICKS( 100 )
 
-    lv_obj_t * obj = lv_obj_create(lv_scr_act());
-    lv_obj_set_size(obj, 40, 40);
-    lv_obj_set_style_bg_color(obj, lv_color_make(0x00, 0xff, 0x00), 0);
-    lv_obj_set_style_line_width(obj, 0, 0);
-    lv_obj_set_style_radius(obj, LV_RADIUS_CIRCLE, 0);
+lv_timer_t * app_timer;
 
-    lv_obj_align(obj, LV_ALIGN_LEFT_MID, 0, 0);
-
-    lv_anim_t a;
-    lv_anim_init(&a);
-    lv_anim_set_var(&a, obj);
-    //lv_anim_set_values(&a, 10, 40);
-    lv_anim_set_time(&a, 500);
-    lv_anim_set_playback_delay(&a, 500);
-    lv_anim_set_playback_time(&a, 500);
-    lv_anim_set_repeat_delay(&a, 500);
-    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
-    lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
-
-    //lv_anim_set_exec_cb(&a, anim_size_cb);
-    //lv_anim_start(&a);
-    lv_anim_set_exec_cb(&a, anim_x_cb);
-    lv_anim_set_values(&a, 0, 195);
-    lv_anim_start(&a);
+int app_init(app_t *app) {
+    return app->spec->init(app);
 }
 
-lv_obj_t *time_text;
-UTCTimeStruct time_tmp;
-lv_timer_t * timer;
+int app_update(app_t *app) {
+    return app->spec->update(app);
+}
+
+int app_close(app_t *app) {
+    return app->spec->close(app);
+}
+
+void load_app(app_t *app) {
+    if (app == active_app) {
+        return;
+    }
+    lv_timer_pause(app_timer);
+    if (active_app) {
+        UNUSED_VARIABLE(app_close(active_app));
+    }
+    active_app = app;
+    UNUSED_VARIABLE(app_init(active_app));
+    lv_timer_resume(app_timer);
+}
 
 void update_time(lv_timer_t * timer) {
-    get_UTC_time(&time_tmp);
-    lv_label_set_text_fmt(time_text, "%02i:%02i:%02i", time_tmp.hour, time_tmp.minutes, time_tmp.seconds);
+    if (active_app) {
+        UNUSED_VARIABLE(app_update(active_app));
+    }
 }
-
-LV_FONT_DECLARE(lv_font_clock_42)
-
-static void drag_event_handler(lv_event_t * e)
-{
-    lv_obj_t * obj = lv_event_get_target(e);
-
-    lv_indev_t * indev = lv_indev_get_act();
-    lv_point_t vect;
-    lv_indev_get_vect(indev, &vect);
-
-    lv_coord_t x = lv_obj_get_x(obj) + vect.x;
-    lv_coord_t y = lv_obj_get_y(obj) + vect.y;
-    lv_obj_set_pos(obj, x, y);
-}
-
-void lv_example(void)
-{
-
-    lv_obj_t * obj;
-    obj = lv_obj_create(lv_scr_act());
-    lv_obj_set_size(obj, 120, 50);
-    lv_obj_add_event_cb(obj, drag_event_handler, LV_EVENT_PRESSING, NULL);
-
-    lv_obj_t * label = lv_label_create(obj);
-    lv_label_set_text(label, "Drag me");
-     lv_obj_set_style_text_color(label, lv_color_make(0x00, 0x00, 0x00), 0);
-    lv_obj_center(label);
-
-
-    lv_example_anim_2();
-
-    time_text = lv_label_create(lv_scr_act());
-    
-    get_UTC_time(&time_tmp);
-
-    lv_obj_set_style_text_font(time_text, &lv_font_clock_42, 0);
-    
-    lv_label_set_text_fmt(time_text, "%02i:%02i:%02i", time_tmp.hour, time_tmp.minutes, time_tmp.seconds);
-    lv_obj_set_style_text_align(time_text, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_align(time_text, LV_ALIGN_CENTER, 0, 0);
-
-    timer = lv_timer_create(update_time, 500, NULL);
-
-}
-
-
 
 void main_app(void* pvParameter) {
-    UNUSED_PARAMETER(pvParameter);
+    UNUSED_PARAMETER(pvParameter); 
 
     enum appMessages msg;
     appMsgQueue = xQueueCreate(QUEUESIZE, ITEMSIZE);
 
-    lv_example();
+    load_app(APP_CLOCK);
 
-    /*lv_obj_t* spinner = lv_spinner_create(lv_scr_act(), 1000, 60);
-    lv_obj_set_size(spinner, 100, 100);
-    lv_obj_center(spinner);*/
+    app_timer = lv_timer_create(update_time, 500, NULL);
+
+    pinetimecos.state = Running;
 
     while (true) {
-        //vTaskDelay(APP_TASK_DELAY);
-        if(pinetimecos.state == Running) {
-            if (xQueueReceive(appMsgQueue, &msg, ( TickType_t ) APP_TASK_DELAY)) {
-                switch (msg)
-                {
-                    case GoToSleep:
-                        /* code */
-                        break;
-                    
-                    default:
-                        break;
-                }
-            }        
-            lv_tick_inc(APP_TASK_DELAY);
-        } else {
+   
+        if (xQueueReceive(appMsgQueue, &msg, ( TickType_t ) APP_TASK_DELAY)) {
+            switch (msg)
+            {
+                case Timeout:
+                case ButtonPushed:
+                    if(pinetimecos.state == Running) {
+                        display_off();
+                        lv_timer_pause(app_timer);
+                    } else {
+                        display_on();
+                        lv_timer_resume(app_timer);
+                    }
+                    break;
+                case WakeUp:
+                    if(pinetimecos.state == Sleep) {
+                        display_on();
+                        lv_timer_resume(app_timer);
+                    }
+                    break;
+                case TouchPushed:
+                    reload_idle_timer();
+                    break;
+                case UpdateBleConnection:
+                    break;
+                default:
+                    break;
+            }
+        }
+        if(pinetimecos.state != Running) {
+            //vTaskDelayUntil( &xLastWakeTime, APP_TASK_DELAY_SLEEP );
             vTaskDelay(APP_TASK_DELAY_SLEEP);
         }
         /* Tasks must be implemented to never return... */
     }
 
+}
+
+void app_push_message(enum appMessages msg) {
+  BaseType_t xHigherPriorityTaskWoken;
+  xHigherPriorityTaskWoken = pdFALSE;
+  xQueueSendFromISR(appMsgQueue, &msg, &xHigherPriorityTaskWoken);
+  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+  //if (xHigherPriorityTaskWoken) {
+  //  taskYIELD_FROM_ISR ();
+  //}
 }

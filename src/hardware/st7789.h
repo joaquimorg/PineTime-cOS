@@ -11,5 +11,8 @@ void st7789_init(void);
 void st7789_set_window(uint32_t x, uint32_t y, uint32_t w, uint32_t h);
 void st7789_fill(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color);
 
+void st7789_display_off(void);
+void st7789_display_on(void);
+
 
 #endif /* ST7789_H */

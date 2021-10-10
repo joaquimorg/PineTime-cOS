@@ -10,7 +10,7 @@
 #define is_leap_year(yr) (!((yr) % 400) || (((yr) % 100) && !((yr) % 4)))
 #define year_length(yr) (is_leap_year(yr) ? 366 : 365)
 
-volatile uint32_t gTimestamp = 1609459200;
+volatile uint32_t gTimestamp = 1609459200 - 946684800;
 //volatile uint32_t gTimestamp = 0;
 
 #define RTC_TICKS (RTC_US_TO_TICKS(1000000ULL, RTC_DEFAULT_CONFIG_FREQUENCY))

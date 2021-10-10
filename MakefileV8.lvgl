@@ -30,31 +30,7 @@ SRC_FILES += \
 	$(LVGL)/font/lv_font.c \
 	$(LVGL)/font/lv_font_fmt_txt.c \
 	$(LVGL)/font/lv_font_loader.c \
-	$(LVGL)/font/lv_font_dejavu_16_persian_hebrew.c \
-	$(LVGL)/font/lv_font_montserrat_8.c \
-	$(LVGL)/font/lv_font_montserrat_10.c \
-	$(LVGL)/font/lv_font_montserrat_12.c \
-	$(LVGL)/font/lv_font_montserrat_12_subpx.c \
-	$(LVGL)/font/lv_font_montserrat_14.c \
-	$(LVGL)/font/lv_font_montserrat_16.c \
-	$(LVGL)/font/lv_font_montserrat_18.c \
-	$(LVGL)/font/lv_font_montserrat_20.c \
 	$(LVGL)/font/lv_font_montserrat_22.c \
-	$(LVGL)/font/lv_font_montserrat_24.c \
-	$(LVGL)/font/lv_font_montserrat_26.c \
-	$(LVGL)/font/lv_font_montserrat_28.c \
-	$(LVGL)/font/lv_font_montserrat_28_compressed.c \
-	$(LVGL)/font/lv_font_montserrat_30.c \
-	$(LVGL)/font/lv_font_montserrat_32.c \
-	$(LVGL)/font/lv_font_montserrat_34.c \
-	$(LVGL)/font/lv_font_montserrat_36.c \
-	$(LVGL)/font/lv_font_montserrat_38.c \
-	$(LVGL)/font/lv_font_montserrat_40.c \
-	$(LVGL)/font/lv_font_montserrat_42.c \
-	$(LVGL)/font/lv_font_montserrat_44.c \
-	$(LVGL)/font/lv_font_montserrat_46.c \
-	$(LVGL)/font/lv_font_montserrat_48.c \
-	$(LVGL)/font/lv_font_simsun_16_cjk.c \
 	$(LVGL)/font/lv_font_unscii_8.c \
 	$(LVGL)/font/lv_font_unscii_16.c \
 	$(LVGL)/hal/lv_hal_disp.c \

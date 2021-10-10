@@ -172,3 +172,12 @@ void st7789_fill(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t co
   }
   nrf_gpio_pin_set(LCD_CSN);
 }
+
+void st7789_display_off(void) {
+  st7789_send(DISPOFF, NULL, 0);
+}
+
+
+void st7789_display_on(void) {
+  st7789_send(DISPON, NULL, 0);
+}
