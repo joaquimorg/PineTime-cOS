@@ -149,3 +149,27 @@ void get_UTC_time(UTCTimeStruct *tm)
 
     tm->week = get_week(tm->year, tm->month, tm->day);
 }
+
+
+const char *get_months_low( uint8_t month ) {
+
+    char const *MonthsLow[] = {
+        "",
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+    };
+
+    return MonthsLow[month];
+
+}
+

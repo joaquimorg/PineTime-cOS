@@ -25,4 +25,6 @@ uint32_t rtc_get_time(void);
 
 void get_UTC_time(UTCTimeStruct *tm);
 
+const char *get_months_low( uint8_t month );
+
 #endif //RTC_H
