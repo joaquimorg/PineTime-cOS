@@ -40,7 +40,7 @@ SRC_FILES += \
   $(PROJ_DIR)/hardware/cst816.c \
   $(PROJ_DIR)/hardware/lvgl_init.c \
   $(PROJ_DIR)/theme/lv_theme_pinetime.c \
-  $(PROJ_DIR)/theme/lv_font_roboto_20.c \
+  $(PROJ_DIR)/theme/lv_font_roboto_24.c \
   $(PROJ_DIR)/theme/lv_font_sys_20.c \
   $(PROJ_DIR)/theme/lv_font_clock_42.c \
   $(PROJ_DIR)/theme/lv_font_clock_90.c \

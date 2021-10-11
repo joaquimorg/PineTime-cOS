@@ -97,10 +97,10 @@ static void lvgl_task_function(void* pvParameter) {
     for(;;) { 
         //vTaskDelayUntil( &xLastWakeTime, xPeriod );        
         if(pinetimecos.state == Running) { 
-            lv_tick_inc(10);
+            lv_tick_inc(15);
             lv_timer_handler();
         }
-        vTaskDelay(pdMS_TO_TICKS(1));
+        vTaskDelay(pdMS_TO_TICKS( 1 ));
         _wdt_kick();
     } 
 

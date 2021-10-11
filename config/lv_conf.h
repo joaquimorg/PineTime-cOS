@@ -61,7 +61,7 @@
  *====================*/
 
 /*Default display refresh period. LVG will redraw changed ares with this period time*/
-#define LV_DISP_DEF_REFR_PERIOD     30      /*[ms]*/
+#define LV_DISP_DEF_REFR_PERIOD     120      /*[ms]*/
 
 /*Input device read period in milliseconds*/
 #define LV_INDEV_DEF_READ_PERIOD    30      /*[ms]*/
@@ -298,13 +298,14 @@ e.g. "stm32f769xx.h" or "stm32f429xx.h"*/
  *You can use these fonts as default font too and they will be available globally.
  *E.g. #define LV_FONT_CUSTOM_DECLARE   LV_FONT_DECLARE(my_font_1) LV_FONT_DECLARE(my_font_2)*/
 #define LV_FONT_CUSTOM_DECLARE \
-LV_FONT_DECLARE(lv_font_roboto_20) \
+LV_FONT_DECLARE(lv_font_roboto_24) \
 LV_FONT_DECLARE(lv_font_sys_20) \
 LV_FONT_DECLARE(lv_font_clock_42) \
 LV_FONT_DECLARE(lv_font_clock_90) \
 
+
 /*Always set a default font*/
-#define LV_FONT_DEFAULT &lv_font_roboto_20
+#define LV_FONT_DEFAULT &lv_font_roboto_24
 
 /*Enable handling large font and/or fonts with a lot of characters.
  *The limit depends on the font size, font face and bpp.
@@ -394,7 +395,7 @@ LV_FONT_DECLARE(lv_font_clock_90) \
 
 #define LV_USE_LABEL        1
 #if LV_USE_LABEL
-#  define LV_LABEL_TEXT_SELECTION         1   /*Enable selecting text of the label*/
+#  define LV_LABEL_TEXT_SELECTION         0   /*Enable selecting text of the label*/
 #  define LV_LABEL_LONG_TXT_HINT    1   /*Store some extra info in labels to speed up drawing of very long texts*/
 #endif
 

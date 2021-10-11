@@ -30,7 +30,7 @@ SRC_FILES += \
 	$(LVGL)/font/lv_font.c \
 	$(LVGL)/font/lv_font_fmt_txt.c \
 	$(LVGL)/font/lv_font_loader.c \
-	$(LVGL)/font/lv_font_montserrat_22.c \
+	$(LVGL)/font/lv_font_montserrat_24.c \
 	$(LVGL)/font/lv_font_unscii_8.c \
 	$(LVGL)/font/lv_font_unscii_16.c \
 	$(LVGL)/hal/lv_hal_disp.c \

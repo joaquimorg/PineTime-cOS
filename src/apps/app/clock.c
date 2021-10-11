@@ -27,28 +27,49 @@ lv_obj_t *screen_clock_create(clock_app_t *ht) {
 
     get_UTC_time(&time_tmp);
 
-    lv_obj_t * lv_time = lv_label_create(scr);    
-    lv_obj_set_style_text_font(lv_time, &lv_font_clock_90, 0);
-    lv_label_set_text_fmt(lv_time, "%02i:%02i", time_tmp.hour, time_tmp.minutes);
-    lv_obj_set_style_text_align(lv_time, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_color(lv_time, lv_color_make(0xff, 0xff, 0x00), 0);
-    lv_obj_align(lv_time, LV_ALIGN_CENTER, -5, -40);
+    lv_obj_t * lv_timeh = lv_label_create(scr);    
+    lv_obj_set_style_text_font(lv_timeh, &lv_font_clock_90, 0);
+    lv_label_set_text_fmt(lv_timeh, "%02i", time_tmp.hour);
+    lv_obj_set_style_text_align(lv_timeh, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_color(lv_timeh, lv_color_make(0xff, 0xff, 0xff), 0);
+    lv_obj_align(lv_timeh, LV_ALIGN_CENTER, -55, -40);
 
-    ht->lv_time = lv_time;
+    ht->lv_timeh = lv_timeh;
 
-    lv_obj_t * lv_time_sec = lv_label_create(scr);    
-    lv_label_set_text_fmt(lv_time_sec, "%02i", time_tmp.seconds);
-    lv_obj_set_style_text_align(lv_time_sec, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_color(lv_time_sec, lv_color_make(0xff, 0xff, 0xff), 0);
-    lv_obj_align(lv_time_sec, LV_ALIGN_CENTER, 100, -65);
+    lv_obj_t * lv_timem = lv_label_create(scr);    
+    lv_obj_set_style_text_font(lv_timem, &lv_font_clock_90, 0);
+    lv_label_set_text_fmt(lv_timem, "%02i", time_tmp.minutes);
+    lv_obj_set_style_text_align(lv_timem, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_color(lv_timem, lv_color_make(0xff, 0xff, 0xff), 0);
+    lv_obj_align(lv_timem, LV_ALIGN_CENTER, 55, -40);
+
+    ht->lv_timem = lv_timem;
+
+    lv_obj_t * lv_times = lv_label_create(scr);    
+    lv_obj_set_style_text_font(lv_times, &lv_font_clock_90, 0);
+    lv_label_set_text_static(lv_times, ":");
+    lv_obj_set_style_text_align(lv_times, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_color(lv_times, lv_color_make(0x00, 0xff, 0x00), 0);
+    lv_obj_align(lv_times, LV_ALIGN_CENTER, 0, -40);
+
+    ht->lv_times = lv_times;
+
+    lv_obj_t * lv_time_sec = lv_label_create(scr);
+    lv_label_set_long_mode(lv_time_sec, LV_LABEL_LONG_SCROLL_CIRCULAR);     /*Circular scroll*/
+    lv_label_set_text(lv_time_sec, "It is a circularly scrolling text. is big....");
+    lv_obj_set_width(lv_time_sec, 220);
+    //lv_obj_set_style_text_align(lv_time_sec, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_color(lv_time_sec, lv_color_make(0xaf, 0xaf, 0xaf), 0);
+    lv_obj_align(lv_time_sec, LV_ALIGN_CENTER, 0, 70);
 
     ht->lv_time_sec = lv_time_sec;
 
     lv_obj_t * lv_date = lv_label_create(scr);    
     //lv_obj_set_style_text_font(lv_date, &lv_font_clock_42, 0);
-    lv_label_set_text_fmt(lv_date, "%02i %s %04i", time_tmp.day, get_months_low(time_tmp.month), time_tmp.year);
+    lv_label_set_recolor(lv_date, true);
+    lv_label_set_text_fmt(lv_date, "#00ff00 %s# %02i %s", get_days(time_tmp.week), time_tmp.day, get_months(time_tmp.month));
     lv_obj_set_style_text_align(lv_date, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_color(lv_date, lv_color_make(0x3d, 0x5a, 0xfe), 0);
+    lv_obj_set_style_text_color(lv_date, lv_color_make(0xff, 0xff, 0xff), 0);
     lv_obj_align(lv_date, LV_ALIGN_CENTER, 0, 20);
 
     ht->lv_date = lv_date;
@@ -69,6 +90,8 @@ lv_obj_t *screen_clock_create(clock_app_t *ht) {
 
     ht->lv_power = lv_power;
 
+    ht->time_old = time_tmp;
+
     return scr;
 }
 
@@ -83,9 +106,23 @@ int clock_update(app_t *app) {
 
     clock_app_t *ht = _from_app(app);
     get_UTC_time(&time_tmp);
-    lv_label_set_text_fmt(ht->lv_time, "%02i:%02i", time_tmp.hour, time_tmp.minutes);
-    lv_label_set_text_fmt(ht->lv_time_sec, "%02i", time_tmp.seconds);
-    lv_label_set_text_fmt(ht->lv_date, "%02i %s %04i", time_tmp.day, get_months_low(time_tmp.month), time_tmp.year);
+
+    if (time_tmp.hour != ht->time_old.hour)
+        lv_label_set_text_fmt(ht->lv_timeh, "%02i", time_tmp.hour);
+
+    if (time_tmp.minutes != ht->time_old.minutes)
+        lv_label_set_text_fmt(ht->lv_timem, "%02i", time_tmp.minutes);
+
+    if ( time_tmp.seconds % 2 == 0 ) {
+      lv_label_set_text_static(ht->lv_times,  ":");
+    } else {
+      lv_label_set_text_static(ht->lv_times,  " ");
+    }
+
+    //lv_label_set_text_fmt(ht->lv_time_sec, "%02i", time_tmp.seconds);
+
+    if (time_tmp.day != ht->time_old.day)
+        lv_label_set_text_fmt(ht->lv_date, "#00ff00 %s# %02i %s", get_days(time_tmp.week), time_tmp.day, get_months(time_tmp.month));
 
     if ( pinetimecos.bluetoothState == StatusOFF ) {
         lv_label_set_text(ht->lv_ble, "");
@@ -98,6 +135,8 @@ int clock_update(app_t *app) {
     } else {
         lv_label_set_text(ht->lv_power, "\xEE\xA4\x85 \xEE\xA4\x87");
     }
+
+    ht->time_old = time_tmp;
 
     return 0;
 }

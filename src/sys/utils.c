@@ -24,9 +24,7 @@ void display_off(void) {
     pinetimecos.state = Sleep;    
 }
 
-void display_on(void) {    
-    lv_tick_inc(LV_DISP_DEF_REFR_PERIOD);
-    lv_timer_handler();
+void display_on(void) {
     pinetimecos.state = Running;
     xTimerStart(idleTimer, 0);
     st7789_display_on();

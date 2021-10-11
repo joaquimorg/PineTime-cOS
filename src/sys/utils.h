@@ -5,12 +5,7 @@
 #include <stdint.h>
 
 #   define container_of(PTR, TYPE, MEMBER) \
-        (_Generic((PTR), \
-            const __typeof__ (((TYPE *) 0)->MEMBER) *: \
-                ((TYPE *) ((char *) (PTR) - offsetof(TYPE, MEMBER))), \
-            __typeof__ (((TYPE *) 0)->MEMBER) *: \
-                ((TYPE *) ((char *) (PTR) - offsetof(TYPE, MEMBER))) \
-        ))
+        ((TYPE *) ((char *) (PTR) - offsetof(TYPE, MEMBER)))
 
 #define COMMAND_BASE 0x00
 #define COMMAND_TIME_UPDATE            COMMAND_BASE + 0x01

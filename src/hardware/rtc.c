@@ -173,3 +173,48 @@ const char *get_months_low( uint8_t month ) {
 
 }
 
+const char *get_days_low( uint8_t day ) {
+    char const *DaysStringLow[] = {
+        "",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+    };
+    return DaysStringLow[day];
+}
+
+const char *get_months( uint8_t month ) {
+    char const *MonthsString[] = {
+        "",
+        "JAN",
+        "FEB",
+        "MAR",
+        "APR",
+        "MAY",
+        "JUN",
+        "JUL",
+        "AUG",
+        "SEP",
+        "OCT",
+        "NOV",
+        "DEC"
+    };
+    return MonthsString[month];
+}
+
+const char *get_days( uint8_t day ) {
+char const *DaysString[] = {        
+        "MONDAY",
+        "TUESDAY",
+        "WEDNESDAY",
+        "THURSDAY",
+        "FRIDAY",
+        "SATURDAY",
+        "SUNDAY"
+    };
+    return DaysString[day];
+}

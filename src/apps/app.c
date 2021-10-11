@@ -59,7 +59,7 @@ void main_app(void* pvParameter) {
 
     load_app(APP_CLOCK);
 
-    app_timer = lv_timer_create(update_time, 500, NULL);
+    app_timer = lv_timer_create(update_time, 250, NULL);
 
     pinetimecos.state = Running;
 
