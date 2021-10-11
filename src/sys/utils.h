@@ -3,9 +3,15 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "nordic_common.h"
+#include "nrf_soc.h"
 
 #   define container_of(PTR, TYPE, MEMBER) \
         ((TYPE *) ((char *) (PTR) - offsetof(TYPE, MEMBER)))
+
+static inline bool in_isr(void) {
+    return (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
+}
 
 #define COMMAND_BASE 0x00
 #define COMMAND_TIME_UPDATE            COMMAND_BASE + 0x01

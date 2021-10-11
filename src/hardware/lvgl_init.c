@@ -2,6 +2,8 @@
 #include "lvgl_init.h"
 #include "lvgl.h"
 #include "pinetime_board.h"
+#include "FreeRTOS.h"
+#include "task.h"
 #include "spi_master2.h"
 #include "nrf_gpio.h"
 #include "st7789.h"

@@ -61,6 +61,8 @@ void main_app(void* pvParameter) {
 
     app_timer = lv_timer_create(update_time, 250, NULL);
 
+    xTaskNotifyGive(xTaskGetCurrentTaskHandle());
+
     pinetimecos.state = Running;
 
     while (true) {
@@ -72,16 +74,16 @@ void main_app(void* pvParameter) {
                 case ButtonPushed:
                     if(pinetimecos.state == Running) {
                         display_off();
-                        lv_timer_pause(app_timer);
+                        //lv_timer_pause(app_timer);
                     } else {
                         display_on();
-                        lv_timer_resume(app_timer);
+                        //lv_timer_resume(app_timer);
                     }
                     break;
                 case WakeUp:
                     if(pinetimecos.state == Sleep) {
                         display_on();
-                        lv_timer_resume(app_timer);
+                        //lv_timer_resume(app_timer);
                     }
                     break;
                 case TouchPushed:
@@ -100,14 +102,21 @@ void main_app(void* pvParameter) {
         /* Tasks must be implemented to never return... */
     }
 
+    vTaskDelete(NULL); 
+
 }
 
 void app_push_message(enum appMessages msg) {
-  BaseType_t xHigherPriorityTaskWoken;
-  xHigherPriorityTaskWoken = pdFALSE;
-  xQueueSendFromISR(appMsgQueue, &msg, &xHigherPriorityTaskWoken);
-  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-  //if (xHigherPriorityTaskWoken) {
-  //  taskYIELD_FROM_ISR ();
-  //}
+
+  if (in_isr()) {
+    BaseType_t xHigherPriorityTaskWoken;
+    xHigherPriorityTaskWoken = pdFALSE;
+    xQueueSendFromISR(appMsgQueue, &msg, &xHigherPriorityTaskWoken);
+    if (xHigherPriorityTaskWoken) {
+      /* Actual macro used here is port specific. */
+      portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
+  } else {
+    xQueueSend(appMsgQueue, &msg, portMAX_DELAY);
+  }
 }

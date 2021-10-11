@@ -11,6 +11,7 @@
 #include "nrf_ble.h"
 #include "lvgl.h"
 #include "app.h"
+#include "sys.h"
 #include "watchdog.h"
 #include "rtc.h"
 #include "backlight.h"
@@ -21,11 +22,13 @@ void display_off(void) {
     xTimerStop(idleTimer, 0);
     set_backlight_level(0);
     st7789_display_off();
-    pinetimecos.state = Sleep;    
+    pinetimecos.state = Sleep;
+    //vTaskSuspend(pinetimecos.lvglTask);
 }
 
 void display_on(void) {
     pinetimecos.state = Running;
+    //xTaskResumeFromISR(pinetimecos.lvglTask);
     xTimerStart(idleTimer, 0);
     st7789_display_on();
     set_backlight_level(pinetimecos.backlightValue);

@@ -24,13 +24,15 @@ enum Status {
 struct pinetimecOS
 {
 
-    BaseType_t appTask;
+    TaskHandle_t lvglTask;
 
     uint8_t backlightValue;
     enum State state;
     enum Status bluetoothState;
     enum Status chargingState;
     enum Status powerState;
+
+    uint16_t debug;
 };
 
 struct pinetimecOS pinetimecos;

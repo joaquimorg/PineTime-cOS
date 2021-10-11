@@ -70,7 +70,10 @@ INC_FOLDERS += \
 LIB_FILES += \
 
 # Optimization flags
-OPT = -Os -g3
+#OPT = -Os
+# -g3
+# Debug
+OPT = -Og -g3
 # Uncomment the line below to enable link time optimization
 #OPT += -flto
 
@@ -87,7 +90,7 @@ CFLAGS += -DNRF52
 CFLAGS += -DNRF52832_XXAA
 CFLAGS += -DNRF52_PAN_74
 CFLAGS += -DNRF_SD_BLE_API_VERSION=7
-CFLAGS += -DS132
+CFLAGS += -DS112
 CFLAGS += -DSOFTDEVICE_PRESENT
 CFLAGS += -mcpu=cortex-m4
 CFLAGS += -mthumb -mabi=aapcs
@@ -116,7 +119,7 @@ ASMFLAGS += -DNRF52
 ASMFLAGS += -DNRF52832_XXAA
 ASMFLAGS += -DNRF52_PAN_74
 ASMFLAGS += -DNRF_SD_BLE_API_VERSION=7
-ASMFLAGS += -DS132
+ASMFLAGS += -DS112
 ASMFLAGS += -DSOFTDEVICE_PRESENT
 
 # Linker flags
@@ -129,11 +132,12 @@ LDFLAGS += -Wl,--gc-sections
 # use newlib in nano version
 LDFLAGS += --specs=nano.specs
 LDFLAGS += -fstack-usage
+LDFLAGS += -Wl,--print-memory-usage
 
-pinetime-cos: CFLAGS += -D__HEAP_SIZE=0x2600
-pinetime-cos: CFLAGS += -D__STACK_SIZE=0x1600
-pinetime-cos: ASMFLAGS += -D__HEAP_SIZE=0x2600
-pinetime-cos: ASMFLAGS += -D__STACK_SIZE=0x1600
+pinetime-cos: CFLAGS += -D__HEAP_SIZE=0x1000
+pinetime-cos: CFLAGS += -D__STACK_SIZE=0x1000
+pinetime-cos: ASMFLAGS += -D__HEAP_SIZE=0x1000
+pinetime-cos: ASMFLAGS += -D__STACK_SIZE=0x1000
 
 # Add standard libraries at the very end of the linker input, after all objects
 # that may need symbols provided by these libraries.
@@ -158,6 +162,6 @@ $(foreach target, $(TARGETS), $(call define_target, $(target)))
 
 softdevice:
 	$(NRFUTIL) settings generate --family NRF52 --application $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).hex --app-boot-validation VALIDATE_GENERATED_CRC --application-version 0xff --bootloader-version 0xff --bl-settings-version 2 $(OUTPUT_DIRECTORY)/dfu_settings.hex
-	python scripts/hexmerge.py --overlap=replace $(SDK_ROOT)/components/softdevice/s132/hex/s132_nrf52_7.2.0_softdevice.hex bootloader/bootloader_pinetime-cos.hex $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).hex $(OUTPUT_DIRECTORY)/dfu_settings.hex -o $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).app.hex
+	python scripts/hexmerge.py --overlap=replace $(SDK_ROOT)/components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex bootloader/bootloader_pinetime-cos.hex $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).hex $(OUTPUT_DIRECTORY)/dfu_settings.hex -o $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).app.hex
 	arm-none-eabi-gdb.exe --batch -ex="target extended-remote 192.168.1.20:3333" -ex "load" -ex "monitor reset" $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).app.hex
 

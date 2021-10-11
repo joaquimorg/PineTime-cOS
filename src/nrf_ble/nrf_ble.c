@@ -61,7 +61,7 @@ TaskHandle_t  app_task_handle;
 #define NEXT_CONN_PARAMS_UPDATE_DELAY   APP_TIMER_TICKS(30000)                      /**< Time between each call to sd_ble_gap_conn_param_update after the first call (30 seconds). */
 #define MAX_CONN_PARAMS_UPDATE_COUNT    3                                           /**< Number of attempts before giving up the connection parameter negotiation. */
 
-#define DEAD_BEEF                       0xDEADBEEF                                  /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
+//#define DEAD_BEEF                       0xDEADBEEF                                  /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
 
 BLE_NUS_DEF(m_nus, NRF_SDH_BLE_TOTAL_LINK_COUNT);                                   /**< BLE NUS service instance. */
@@ -70,7 +70,7 @@ NRF_BLE_QWR_DEF(m_qwr);                                                         
 BLE_ADVERTISING_DEF(m_advertising);                                                 /**< Advertising module instance. */
 
 static uint16_t   m_conn_handle = BLE_CONN_HANDLE_INVALID;                 /**< Handle of the current connection. */
-static uint16_t   m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - 3;            /**< Maximum length of data (in bytes) that can be transmitted to the peer by the Nordic UART service module. */
+//static uint16_t   m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - 3;            /**< Maximum length of data (in bytes) that can be transmitted to the peer by the Nordic UART service module. */
 static ble_uuid_t m_adv_uuids[] =                                          /**< Universally unique service identifier. */
 {
     {BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}
@@ -229,9 +229,6 @@ static void ble_evt_handler(ble_evt_t const* p_ble_evt, void* p_context) {
     {
         case BLE_GAP_EVT_CONNECTED:
             //NRF_LOG_INFO("Connected");
-            //lcd_print(10, 100, "BLE ON", RGB2COLOR(0, 0, 255));
-            //err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
-            //APP_ERROR_CHECK(err_code);
             pinetimecos.bluetoothState = StatusON;
             app_push_message(UpdateBleConnection);
             app_push_message(WakeUp);
@@ -242,8 +239,6 @@ static void ble_evt_handler(ble_evt_t const* p_ble_evt, void* p_context) {
 
         case BLE_GAP_EVT_DISCONNECTED:
             //NRF_LOG_INFO("Disconnected");
-            //lcd_print(10, 100, "BLE OFF", RGB2COLOR(255, 0, 0));
-            // LED indication will be changed when advertising starts.
             pinetimecos.bluetoothState = StatusOFF;
             app_push_message(UpdateBleConnection);
             app_push_message(WakeUp);
@@ -274,7 +269,7 @@ static void ble_evt_handler(ble_evt_t const* p_ble_evt, void* p_context) {
             APP_ERROR_CHECK(err_code);
             break;
 
-        case BLE_GAP_EVT_DATA_LENGTH_UPDATE_REQUEST:
+        /*case BLE_GAP_EVT_DATA_LENGTH_UPDATE_REQUEST:
         {
             ble_gap_data_length_params_t dl_params;
 
@@ -282,7 +277,7 @@ static void ble_evt_handler(ble_evt_t const* p_ble_evt, void* p_context) {
             memset(&dl_params, 0, sizeof(ble_gap_data_length_params_t));
             err_code = sd_ble_gap_data_length_update(p_ble_evt->evt.gap_evt.conn_handle, &dl_params, NULL);
             APP_ERROR_CHECK(err_code);
-        } break;
+        } break;*/
         
         case BLE_GATTC_EVT_TIMEOUT:
             // Disconnect on GATT Client timeout event.
@@ -298,7 +293,7 @@ static void ble_evt_handler(ble_evt_t const* p_ble_evt, void* p_context) {
             APP_ERROR_CHECK(err_code);
             break;
 
-        case BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST:
+        /*case BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST:
         {
             ble_gatts_evt_rw_authorize_request_t  req;
             ble_gatts_rw_authorize_reply_params_t auth_reply;
@@ -326,7 +321,7 @@ static void ble_evt_handler(ble_evt_t const* p_ble_evt, void* p_context) {
                 }
             }
         } break; // BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST
-
+        */
         default:
             // No implementation needed.
             break;
@@ -353,26 +348,15 @@ static void ble_stack_init(void) {
     NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, ble_evt_handler, NULL);
 }
 
-void gatt_evt_handler(nrf_ble_gatt_t* p_gatt, nrf_ble_gatt_evt_t const* p_evt) {
-    if ((m_conn_handle == p_evt->conn_handle) && (p_evt->evt_id == NRF_BLE_GATT_EVT_ATT_MTU_UPDATED))
-    {
-        m_ble_nus_max_data_len = p_evt->params.att_mtu_effective - OPCODE_LENGTH - HANDLE_LENGTH;
-        //NRF_LOG_INFO("Data len is set to 0x%X(%d)", m_ble_nus_max_data_len, m_ble_nus_max_data_len);
-         
-    }
-    /*NRF_LOG_DEBUG("ATT MTU exchange completed. central 0x%x peripheral 0x%x",
-        p_gatt->att_mtu_desired_central,
-        p_gatt->att_mtu_desired_periph);*/
-}
 
 void gatt_init(void) {
     ret_code_t err_code;
 
-    err_code = nrf_ble_gatt_init(&m_gatt, gatt_evt_handler);
+    err_code = nrf_ble_gatt_init(&m_gatt, NULL);
     APP_ERROR_CHECK(err_code);
 
-    err_code = nrf_ble_gatt_att_mtu_periph_set(&m_gatt, NRF_SDH_BLE_GATT_MAX_MTU_SIZE);
-    APP_ERROR_CHECK(err_code);
+    //err_code = nrf_ble_gatt_att_mtu_periph_set(&m_gatt, NRF_SDH_BLE_GATT_MAX_MTU_SIZE);
+    //(err_code);
 }
 
 static void advertising_init(void) {

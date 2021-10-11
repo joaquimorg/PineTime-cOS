@@ -25,6 +25,8 @@ lv_obj_t *screen_clock_create(clock_app_t *ht) {
     //lv_obj_t *scr = lv_obj_create(lv_scr_act());
     lv_obj_t *scr = lv_scr_act();
 
+    //lv_obj_set_style_bg_color(scr, lv_color_hex(0x020202), 0);
+
     get_UTC_time(&time_tmp);
 
     lv_obj_t * lv_timeh = lv_label_create(scr);    
@@ -54,16 +56,6 @@ lv_obj_t *screen_clock_create(clock_app_t *ht) {
 
     ht->lv_times = lv_times;
 
-    lv_obj_t * lv_time_sec = lv_label_create(scr);
-    lv_label_set_long_mode(lv_time_sec, LV_LABEL_LONG_SCROLL_CIRCULAR);     /*Circular scroll*/
-    lv_label_set_text(lv_time_sec, "It is a circularly scrolling text. is big....");
-    lv_obj_set_width(lv_time_sec, 220);
-    //lv_obj_set_style_text_align(lv_time_sec, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_color(lv_time_sec, lv_color_make(0xaf, 0xaf, 0xaf), 0);
-    lv_obj_align(lv_time_sec, LV_ALIGN_CENTER, 0, 70);
-
-    ht->lv_time_sec = lv_time_sec;
-
     lv_obj_t * lv_date = lv_label_create(scr);    
     //lv_obj_set_style_text_font(lv_date, &lv_font_clock_42, 0);
     lv_label_set_recolor(lv_date, true);
@@ -89,6 +81,26 @@ lv_obj_t *screen_clock_create(clock_app_t *ht) {
     lv_label_set_text(lv_power, "\xEE\xA4\x87");
 
     ht->lv_power = lv_power;
+
+
+    lv_obj_t * lv_time_sec = lv_label_create(scr);
+    lv_label_set_long_mode(lv_time_sec, LV_LABEL_LONG_SCROLL_CIRCULAR);     /*Circular scroll*/
+    lv_label_set_text(lv_time_sec, "It is a circularly scrolling text. is big....");
+    lv_obj_set_width(lv_time_sec, 220);
+    //lv_obj_set_style_text_align(lv_time_sec, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_color(lv_time_sec, lv_color_make(0xaf, 0xaf, 0xaf), 0);
+    lv_obj_align(lv_time_sec, LV_ALIGN_CENTER, 0, 70);
+
+    ht->lv_time_sec = lv_time_sec;
+
+
+    /*lv_obj_t * lv_demo = lv_label_create(scr);    
+    lv_label_set_text_fmt(lv_demo, "%i", pinetimecos.debug);
+    lv_obj_set_style_text_align(lv_demo, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_color(lv_demo, lv_color_make(0xff, 0xff, 0xff), 0);
+    lv_obj_align(lv_demo, LV_ALIGN_BOTTOM_LEFT, 0, 0);
+
+    ht->lv_demo = lv_demo;*/
 
     ht->time_old = time_tmp;
 
@@ -137,6 +149,8 @@ int clock_update(app_t *app) {
     }
 
     ht->time_old = time_tmp;
+
+    //lv_label_set_text_fmt(ht->lv_demo, "%i", pinetimecos.debug);
 
     return 0;
 }

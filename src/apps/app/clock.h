@@ -10,6 +10,7 @@
 typedef struct _clock_app {
     app_t app;
     lv_obj_t *screen;
+    lv_obj_t *lv_demo;
     lv_obj_t *lv_timeh;
     lv_obj_t *lv_timem;
     lv_obj_t *lv_times;
