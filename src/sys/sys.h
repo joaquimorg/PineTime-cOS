@@ -6,6 +6,8 @@
 #include "FreeRTOS.h"
 #include "timers.h"
 
+#include "app.h"
+
 #define BUFFER_MAXCHARS 128
 
 volatile uint8_t inputBuffer[BUFFER_MAXCHARS];
@@ -20,19 +22,26 @@ enum Status {
      StatusOFF          = 0x02
 };
 
+enum RefreshDirections {
+     None      = 0x00,
+     Up        = 0x01,
+     Down      = 0x02,
+     Left      = 0x03,
+     Right     = 0x04,
+};
+
 /* Main struct to for global state */
-struct pinetimecOS
-{
+struct pinetimecOS {
 
-    TaskHandle_t lvglTask;
-
-    uint8_t backlightValue;
-    enum State state;
-    enum Status bluetoothState;
-    enum Status chargingState;
-    enum Status powerState;
-
-    uint16_t debug;
+     uint8_t backlightValue;
+     enum State state;
+     enum State lvglstate;
+     enum Status bluetoothState;
+     enum Status chargingState;
+     enum Status powerState;
+     enum appGestures gestureDir;
+     enum RefreshDirections refreshDirection;
+     uint16_t debug;
 };
 
 struct pinetimecOS pinetimecos;

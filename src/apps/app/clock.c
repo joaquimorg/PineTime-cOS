@@ -19,13 +19,21 @@ static inline clock_app_t *_from_app(app_t *app) {
     return container_of(app, clock_app_t, app);
 }
 
-lv_obj_t *screen_clock_create(clock_app_t *ht) {
+
+lv_obj_t *screen_clock_create(clock_app_t *ht, lv_obj_t * parent) {
     UTCTimeStruct time_tmp;
 
-    //lv_obj_t *scr = lv_obj_create(lv_scr_act());
-    lv_obj_t *scr = lv_scr_act();
+    lv_obj_t *scr = lv_obj_create(parent);
 
-    //lv_obj_set_style_bg_color(scr, lv_color_hex(0x020202), 0);
+    lv_obj_clear_flag(scr, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_clear_flag(scr, LV_OBJ_FLAG_SCROLL_ELASTIC);
+    lv_obj_remove_style_all(scr);                            /*Make it transparent*/
+    lv_obj_set_size(scr, lv_pct(100), lv_pct(100));
+    lv_obj_set_scroll_snap_y(scr, LV_SCROLL_SNAP_CENTER);    /*Snap the children to the center*/
+
+    //lv_obj_t *scr = lv_scr_act();
+
+    lv_obj_set_style_bg_color(scr, lv_color_hex(0x040404), 0);
 
     get_UTC_time(&time_tmp);
 
@@ -89,27 +97,18 @@ lv_obj_t *screen_clock_create(clock_app_t *ht) {
     lv_obj_set_width(lv_time_sec, 220);
     //lv_obj_set_style_text_align(lv_time_sec, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_color(lv_time_sec, lv_color_make(0xaf, 0xaf, 0xaf), 0);
-    lv_obj_align(lv_time_sec, LV_ALIGN_CENTER, 0, 70);
+    lv_obj_align(lv_time_sec, LV_ALIGN_CENTER, 0, 75);
 
     ht->lv_time_sec = lv_time_sec;
-
-
-    /*lv_obj_t * lv_demo = lv_label_create(scr);    
-    lv_label_set_text_fmt(lv_demo, "%i", pinetimecos.debug);
-    lv_obj_set_style_text_align(lv_demo, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_color(lv_demo, lv_color_make(0xff, 0xff, 0xff), 0);
-    lv_obj_align(lv_demo, LV_ALIGN_BOTTOM_LEFT, 0, 0);
-
-    ht->lv_demo = lv_demo;*/
 
     ht->time_old = time_tmp;
 
     return scr;
 }
 
-int clock_init(app_t *app) {
+int clock_init(app_t *app, lv_obj_t * parent) {
     clock_app_t *htapp = _from_app(app);
-    htapp->screen = screen_clock_create(htapp);
+    htapp->screen = screen_clock_create(htapp, parent);
     return 0;
 }
 
@@ -150,13 +149,12 @@ int clock_update(app_t *app) {
 
     ht->time_old = time_tmp;
 
-    //lv_label_set_text_fmt(ht->lv_demo, "%i", pinetimecos.debug);
-
     return 0;
 }
 
 int clock_close(app_t *app) {
     clock_app_t *ht = _from_app(app);
+    lv_obj_clean(ht->screen);
     lv_obj_del(ht->screen);
     ht->screen = NULL;
     return 0;

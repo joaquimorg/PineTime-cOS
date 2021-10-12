@@ -11,7 +11,7 @@
 typedef struct _app app_t;
 typedef struct app_spec {
      const char *name;
-     int (*init)(app_t *app);
+     int (*init)(app_t *app, lv_obj_t * parent);
      int (*update)(app_t *app);
      int (*close)(app_t *app);
 } app_spec_t;
@@ -33,6 +33,15 @@ enum appMessages {
      TouchPushed            = 0x05,
      WakeUp                 = 0x06,
      Charging               = 0x07,
+     Gesture                = 0x08,
+};
+
+enum appGestures {
+     DIR_NONE       = 0x00,
+     DIR_LEFT       = 0x01,     
+     DIR_RIGHT      = 0x02,
+     DIR_TOP        = 0x03,
+     DIR_BOTTOM     = 0x04,
 };
 
 QueueHandle_t appMsgQueue;
@@ -45,9 +54,9 @@ void main_app(void* pvParameter);
 void app_push_message(enum appMessages msg);
 
 
-int app_init(app_t *app);
+int app_init(app_t *app, lv_obj_t * parent);
 int app_update(app_t *app);
 int app_close(app_t *app);
-void load_app(app_t *app);
+void load_app(app_t *app, lv_obj_t * parent);
 
 #endif // APP_H

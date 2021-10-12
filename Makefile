@@ -51,6 +51,7 @@ SRC_FILES += \
 # APPS
 SRC_FILES += \
   $(PROJ_DIR)/apps/app/clock.c \
+  $(PROJ_DIR)/apps/app/info.c \
 
 
 # Include
@@ -100,6 +101,8 @@ CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
 CFLAGS += -fno-builtin -fshort-enums
 #CFLAGS += -Wstack-usage=48
+# remove error from unused functions
+CFLAGS += -Wno-unused-function
 
 # C++ flags common to all targets
 CXXFLAGS += $(OPT)

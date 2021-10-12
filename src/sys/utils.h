@@ -29,6 +29,7 @@ static inline bool in_isr(void) {
 void display_on(void);
 void display_off(void);
 
+const char* actual_reset_reason(void);
 
 void ble_command(uint8_t msg_type);
 

@@ -20,18 +20,10 @@
 #include "semphr.h"
 
 
-#define SYS_TASK_DELAY          pdMS_TO_TICKS( 100 )
-#define SYS_TASK_DELAY_SLEEP    pdMS_TO_TICKS( 1000 )
+#define SYS_TASK_DELAY          pdMS_TO_TICKS( 50 )
+#define SYS_TASK_DELAY_SLEEP    pdMS_TO_TICKS( 500 )
 
 TimerHandle_t buttonTimer;
-
-static void _wdt_kick() {    
-
-    if (nrf_gpio_pin_read(KEY_ACTION)) {
-        return;
-    }    
-    feed_watchdog();
-}
 
 void reload_idle_timer(void) {
   if(pinetimecos.state == Sleep) return;
@@ -69,10 +61,7 @@ static void gpiote_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t a
 }
 
 void vApplicationTickHook(void) {
-    if(pinetimecos.state == Running) { 
-        //lv_tick_inc(LV_DISP_DEF_REFR_PERIOD);
-        //lv_timer_handler();
-    }
+
 }
 
 
@@ -83,10 +72,13 @@ static void lvgl_task_function(void* pvParameter) {
     while (true) {
         
         if(pinetimecos.state == Running) { 
-            lv_tick_inc(20);
-            lv_timer_handler();
+            if (pinetimecos.lvglstate == Running) {
+                lv_tick_inc(5);
+                //lv_timer_handler();
+            }
+            
         }
-        vTaskDelay(pdMS_TO_TICKS( 1 ));
+        vTaskDelay(pdMS_TO_TICKS( 2 ));
         
     } 
 
@@ -97,8 +89,7 @@ static void lvgl_task_function(void* pvParameter) {
 static void sys_task_function(void* pvParameter) {
 
     UNUSED_PARAMETER(pvParameter);
-
-    init_watchdog();
+    xTimerStart(idleTimer, 0);
 
     while (true) {
 
@@ -130,8 +121,8 @@ static void sys_task_function(void* pvParameter) {
         // Read step counter
 
         // Control the HR reading 
+   
 
-        _wdt_kick();
     }
     vTaskDelete(NULL); 
 }
@@ -148,7 +139,7 @@ void sys_init(void) {
 
     nrf_drv_gpiote_init();
         
-    rtc_init();
+    rtc_init();    
 
     // Button
     buttonTimer = xTimerCreate ("buttonTimer", 300, pdFALSE, (void *) 0, button_timer_callback);
@@ -171,19 +162,17 @@ void sys_init(void) {
 
     // CHARGE_BASE_IRQ
     nrf_gpio_cfg_input(CHARGE_BASE_IRQ, NRF_GPIO_PIN_NOPULL);
-    
+
+    nrf_ble_init();
 
     lvgl_init();
     backlight_init();
     set_backlight_level(2);
-
-    UNUSED_VARIABLE(xTaskCreate(lvgl_task_function, "LVGL", 256, NULL, 5, &pinetimecos.lvglTask ));
-    UNUSED_VARIABLE(xTaskCreate(sys_task_function, "SYS", 256, NULL, 6, (TaskHandle_t *) NULL));
-    UNUSED_VARIABLE(xTaskCreate(main_app, "APP", 1024, NULL, 6, (TaskHandle_t *) NULL));
+    
+    UNUSED_VARIABLE(xTaskCreate(sys_task_function, "SYS", configMINIMAL_STACK_SIZE + 256, NULL, 2, (TaskHandle_t *) NULL));
+    UNUSED_VARIABLE(xTaskCreate(lvgl_task_function, "LVGL", configMINIMAL_STACK_SIZE + 128, NULL, 2, (TaskHandle_t *) NULL));
+    UNUSED_VARIABLE(xTaskCreate(main_app, "APP", configMINIMAL_STACK_SIZE + 1024, NULL, 2, (TaskHandle_t *) NULL));
 
     idleTimer = xTimerCreate ("idleTimer", pdMS_TO_TICKS(30000), pdFALSE, NULL, idle_timer_callback);
-    xTimerStart(idleTimer, 0);
-
-    nrf_ble_init();
-
+    
 }

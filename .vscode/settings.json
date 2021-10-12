@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "*.sql": "oracle",
-        "nrf_ble.h": "c"
+        "nrf_ble.h": "c",
+        "xiosbase": "c"
     }
 }
