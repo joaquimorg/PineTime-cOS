@@ -14,6 +14,11 @@ NRFUTIL := d:/Work/Pinetime/nRF52832/nrfutil
 #SDK_ROOT := /mnt/d/Work/PineTime/nRF5_SDK_17.1.0_ddde560
 SDK_ROOT := d:/Work/PineTime/nRF5_SDK_17.1.0_ddde560
 
+SOFT_DEVICE := s112
+SOFT_DEVICE_HEX := s112_nrf52_7.2.0_softdevice.hex
+
+SOFT_DEVICE_UC := S112
+
 PROJ_DIR := ./src
 
 $(OUTPUT_DIRECTORY)/pinetime-cos.out: \
@@ -34,6 +39,7 @@ SRC_FILES += \
   $(PROJ_DIR)/sys/utils.c \
   $(PROJ_DIR)/hardware/watchdog.c \
   $(PROJ_DIR)/hardware/backlight.c \
+  $(PROJ_DIR)/hardware/battery.c \
   $(PROJ_DIR)/hardware/rtc.c \
   $(PROJ_DIR)/hardware/spi_master2.c \
   $(PROJ_DIR)/hardware/st7789.c \
@@ -71,10 +77,9 @@ INC_FOLDERS += \
 LIB_FILES += \
 
 # Optimization flags
-#OPT = -Os
-# -g3
+OPT = -Os -g3
 # Debug
-OPT = -Og -g3
+#OPT = -Og -g3
 # Uncomment the line below to enable link time optimization
 #OPT += -flto
 
@@ -84,14 +89,14 @@ CFLAGS += $(OPT)
 #CFLAGS += -DAPP_TIMER_V2
 #CFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
 CFLAGS += -DBOARD_PCA10040
-CFLAGS += -DCONFIG_GPIO_AS_PINRESET
+#CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DFLOAT_ABI_HARD
 CFLAGS += -DFREERTOS
 CFLAGS += -DNRF52
 CFLAGS += -DNRF52832_XXAA
 CFLAGS += -DNRF52_PAN_74
 CFLAGS += -DNRF_SD_BLE_API_VERSION=7
-CFLAGS += -DS112
+CFLAGS += -D$(SOFT_DEVICE_UC)
 CFLAGS += -DSOFTDEVICE_PRESENT
 CFLAGS += -mcpu=cortex-m4
 CFLAGS += -mthumb -mabi=aapcs
@@ -108,21 +113,21 @@ CFLAGS += -Wno-unused-function
 CXXFLAGS += $(OPT)
 #ASMFLAGS += -DDEBUG
 # Assembler flags common to all targets
-#ASMFLAGS += -g3
+ASMFLAGS += -g3
 ASMFLAGS += -mcpu=cortex-m4
 ASMFLAGS += -mthumb -mabi=aapcs
 ASMFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 #ASMFLAGS += -DAPP_TIMER_V2
 #ASMFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
 ASMFLAGS += -DBOARD_PCA10040
-ASMFLAGS += -DCONFIG_GPIO_AS_PINRESET
+#ASMFLAGS += -DCONFIG_GPIO_AS_PINRESET
 ASMFLAGS += -DFLOAT_ABI_HARD
 ASMFLAGS += -DFREERTOS
 ASMFLAGS += -DNRF52
 ASMFLAGS += -DNRF52832_XXAA
 ASMFLAGS += -DNRF52_PAN_74
 ASMFLAGS += -DNRF_SD_BLE_API_VERSION=7
-ASMFLAGS += -DS112
+ASMFLAGS += -D$(SOFT_DEVICE_UC)
 ASMFLAGS += -DSOFTDEVICE_PRESENT
 
 # Linker flags
@@ -149,22 +154,26 @@ LIB_FILES += -lc -lnosys -lm
 .PHONY: default help
 
 # Default target - first one defined
-default: pinetime-cos
+default: all
+
+all: pinetime-cos
 
 # Print all targets that can be built
 help:
 	@echo following targets are available:
 	@echo		pinetime-cos
-	@echo		softdevice - make .hex from bootloader and app
+	@echo		softdevice - make .hex from bootloader, softdevice and app
+	@echo		prog - Program Pinetime via GDB
 
 TEMPLATE_PATH := $(SDK_ROOT)/components/toolchain/gcc
-
 include $(TEMPLATE_PATH)/Makefile.common
-
 $(foreach target, $(TARGETS), $(call define_target, $(target)))
 
-softdevice:
-	$(NRFUTIL) settings generate --family NRF52 --application $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).hex --app-boot-validation VALIDATE_GENERATED_CRC --application-version 0xff --bootloader-version 0xff --bl-settings-version 2 $(OUTPUT_DIRECTORY)/dfu_settings.hex
-	python scripts/hexmerge.py --overlap=replace $(SDK_ROOT)/components/softdevice/s112/hex/s112_nrf52_7.2.0_softdevice.hex bootloader/bootloader_pinetime-cos.hex $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).hex $(OUTPUT_DIRECTORY)/dfu_settings.hex -o $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).app.hex
-	arm-none-eabi-gdb.exe --batch -ex="target extended-remote 192.168.1.20:3333" -ex "load" -ex "monitor reset" $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).app.hex
-
+softdevice: default
+	@echo	** Creating $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).app.hex
+	@$(NRFUTIL) settings generate --family NRF52 --application $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).hex --app-boot-validation VALIDATE_GENERATED_CRC --application-version 0xff --bootloader-version 0xff --bl-settings-version 2 --softdevice $(SDK_ROOT)/components/softdevice/$(SOFT_DEVICE)/hex/$(SOFT_DEVICE_HEX) $(OUTPUT_DIRECTORY)/dfu_settings.hex
+	@python scripts/hexmerge.py --overlap=replace $(SDK_ROOT)/components/softdevice/$(SOFT_DEVICE)/hex/$(SOFT_DEVICE_HEX) bootloader/bootloader_pinetime-cos.hex $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).hex $(OUTPUT_DIRECTORY)/dfu_settings.hex -o $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).app.hex
+	
+prog: softdevice
+	@echo	** Program Pinetime with $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).app.hex
+	@arm-none-eabi-gdb.exe --batch -ex="target extended-remote 192.168.1.20:3333" -ex "load" -ex "monitor reset" $(OUTPUT_DIRECTORY)/$(PROJECT_NAME).app.hex

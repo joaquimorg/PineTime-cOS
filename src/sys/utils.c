@@ -82,6 +82,7 @@ void ble_command(uint8_t msg_type) {
             app_push_message(WakeUp);
             break;
         default:
+            app_push_message(WakeUp);
             break;
     }
 

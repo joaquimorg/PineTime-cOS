@@ -32,14 +32,9 @@ lv_obj_t *screen_info_create(info_app_t *ht, lv_obj_t * parent) {
 
     lv_obj_set_style_bg_color(scr, lv_color_hex(0x020210), 0);
 
-    lv_mem_monitor_t mon;
-    lv_mem_monitor(&mon);
-    int used_size = mon.total_size - mon.free_size;;
-    int used_kb = used_size / 1024;
-    int used_kb_tenth = (used_size - (used_kb * 1024)) / 102;
 
     lv_obj_t * lv_demo = lv_label_create(scr);    
-    lv_label_set_text_fmt(lv_demo, "Info\n%s\n%d.%d kB used (%d %%)\n%d%% frag.", actual_reset_reason(), used_kb,  used_kb_tenth, mon.used_pct, mon.frag_pct);
+    lv_label_set_text_fmt(lv_demo, "Info\nBattery\n%1i.%02i volts\n%d%%", pinetimecos.batteryVoltage / 1000, pinetimecos.batteryVoltage % 1000 / 10, pinetimecos.batteryPercentRemaining);
     lv_obj_set_style_text_align(lv_demo, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_color(lv_demo, lv_color_hex(0xffffff), 0);
     lv_obj_align(lv_demo, LV_ALIGN_CENTER, 0, 0);
@@ -57,9 +52,9 @@ int info_init(app_t *app, lv_obj_t * parent) {
 
 int info_update(app_t *app) {
 
-    //info_app_t *ht = _from_app(app);
+    info_app_t *ht = _from_app(app);
 
-    //lv_label_set_text_fmt(ht->lv_demo, "Info...%i", pinetimecos.debug);
+    lv_label_set_text_fmt(ht->lv_demo, "Info\nBattery\n%1i.%02i volts\n%d%%", pinetimecos.batteryVoltage / 1000, pinetimecos.batteryVoltage % 1000 / 10, pinetimecos.batteryPercentRemaining);
 
     return 0;
 }

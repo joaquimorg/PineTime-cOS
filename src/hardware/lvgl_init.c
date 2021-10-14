@@ -105,9 +105,9 @@ static void disp_flush(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_
 
     uint16_t y1, y2, width, height = 0;
 
-    if( (pinetimecos.refreshDirection == Down) && (area->y2 == visibleNbLines - 1)) {
+    if( (pinetimecosapp.refreshDirection == Down) && (area->y2 == visibleNbLines - 1)) {
         writeOffset = ((writeOffset + totalNbLines) - visibleNbLines) % totalNbLines;
-    } else if( (pinetimecos.refreshDirection == Up) && (area->y1 == 0) ) {
+    } else if( (pinetimecosapp.refreshDirection == Up) && (area->y1 == 0) ) {
         writeOffset = (writeOffset + visibleNbLines) % totalNbLines;
     }
 
@@ -117,12 +117,12 @@ static void disp_flush(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_
     width = (area->x2 - area->x1) + 1;
     height = (area->y2 - area->y1) + 1;
 
-    if ( pinetimecos.refreshDirection == Down ) {
+    if ( pinetimecosapp.refreshDirection == Down ) {
         if(area->y2 < visibleNbLines - 1) {
             uint16_t toScroll = 0;
                 if(area->y1 == 0) {
                 toScroll = height * 2;
-                pinetimecos.refreshDirection = None;
+                pinetimecosapp.refreshDirection = None;
                 lv_disp_set_direction(lv_disp_get_default(), 0);
             } else {
                 toScroll = height;
@@ -136,12 +136,12 @@ static void disp_flush(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_
             }
             st7789_vertical_scroll_start_address(scrollOffset);
         }
-    } else if(pinetimecos.refreshDirection == Up) {
+    } else if(pinetimecosapp.refreshDirection == Up) {
 
         if(area->y1 > 0) {
             if(area->y2 == visibleNbLines - 1) {
                 scrollOffset += (height * 2);
-                pinetimecos.refreshDirection = None;
+                pinetimecosapp.refreshDirection = None;
                 lv_disp_set_direction(lv_disp_get_default(), 0);
             } else {
                 scrollOffset += height;

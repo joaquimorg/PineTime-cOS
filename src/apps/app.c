@@ -37,24 +37,24 @@ static void gesture_event_cb(lv_event_t * e) {
 
     switch (tsData.gesture) {
         case TOUCH_SLIDE_LEFT:
-            pinetimecos.gestureDir = DIR_LEFT;
+            pinetimecosapp.gestureDir = DIR_LEFT;
             break;
         case TOUCH_SLIDE_RIGHT:
-            pinetimecos.gestureDir = DIR_RIGHT;
+            pinetimecosapp.gestureDir = DIR_RIGHT;
             break;
         case TOUCH_SLIDE_UP:
-            pinetimecos.gestureDir = DIR_TOP;
+            pinetimecosapp.gestureDir = DIR_TOP;
             break;
         case TOUCH_SLIDE_DOWN:
-            pinetimecos.gestureDir = DIR_BOTTOM;
+            pinetimecosapp.gestureDir = DIR_BOTTOM;
             break;
         default:
-            pinetimecos.gestureDir = DIR_NONE;
+            pinetimecosapp.gestureDir = DIR_NONE;
             break;
     }
     tsData.gesture = TOUCH_NO_GESTURE;
    
-    if ( pinetimecos.gestureDir != DIR_NONE ) {
+    if ( pinetimecosapp.gestureDir != DIR_NONE ) {
         app_push_message(Gesture);
     }
 }
@@ -75,7 +75,7 @@ int app_close(app_t *app) {
 
 
 void set_refresh_direction(enum RefreshDirections dir) {
-    pinetimecos.refreshDirection = dir;
+    pinetimecosapp.refreshDirection = dir;
     if ( dir == Up ) {
         lv_disp_set_direction(lv_disp_get_default(), 0);
     } else {
@@ -84,25 +84,25 @@ void set_refresh_direction(enum RefreshDirections dir) {
 }
 
 void load_app(app_t *app, lv_obj_t * parent) {
-    if (app == active_app) {
+    if (app == pinetimecosapp.active_app) {
         return;
     }
     pinetimecos.lvglstate = Sleep;
     lv_timer_pause(app_timer);
-    if (active_app) {
-        UNUSED_VARIABLE(app_close(active_app));
+    if (pinetimecosapp.active_app) {
+        UNUSED_VARIABLE(app_close(pinetimecosapp.active_app));
     }
 
-    active_app = app;
-    UNUSED_VARIABLE(app_init(active_app, parent));    
+    pinetimecosapp.active_app = app;
+    UNUSED_VARIABLE(app_init(pinetimecosapp.active_app, parent));    
 
     pinetimecos.lvglstate = Running;
     lv_timer_resume(app_timer);    
 }
 
 void update_time(lv_timer_t * timer) {
-    if (active_app) {
-        UNUSED_VARIABLE(app_update(active_app));
+    if (pinetimecosapp.active_app) {
+        UNUSED_VARIABLE(app_update(pinetimecosapp.active_app));
     }
 }
 
@@ -149,16 +149,16 @@ void main_app(void* pvParameter) {
                     reload_idle_timer();
                     break;
                 case Gesture:
-                    switch (pinetimecos.gestureDir) {
+                    switch (pinetimecosapp.gestureDir) {
                         case DIR_TOP:
-                            if (active_app == APP_INFO ) {
+                            if (pinetimecosapp.active_app == APP_INFO ) {
                                 set_refresh_direction(Up);
                                 load_app(APP_CLOCK, scr);
                             }
                             break;
 
                         case DIR_BOTTOM:
-                            if (active_app == APP_CLOCK ) {
+                            if (pinetimecosapp.active_app == APP_CLOCK ) {
                                 set_refresh_direction(Down);
                                 load_app(APP_INFO, scr);
                             }
@@ -167,7 +167,7 @@ void main_app(void* pvParameter) {
                         default:
                             break;
                     }
-                    pinetimecos.gestureDir = DIR_NONE;
+                    pinetimecosapp.gestureDir = DIR_NONE;
                     //pinetimecos.debug = pinetimecos.gestureDir;
                     break;
                 case UpdateBleConnection:
@@ -177,11 +177,9 @@ void main_app(void* pvParameter) {
             }
         }
         if(pinetimecos.state != Running) {
-            //vTaskDelayUntil( &xLastWakeTime, APP_TASK_DELAY_SLEEP );
             vTaskDelay(APP_TASK_DELAY_SLEEP);
         } else {
             if (pinetimecos.lvglstate == Running) {
-                //lv_tick_inc(10);
                 lv_timer_handler();
             }
         }
@@ -195,16 +193,16 @@ void main_app(void* pvParameter) {
 }
 
 void app_push_message(enum appMessages msg) {
-
-  if (in_isr()) {
-    BaseType_t xHigherPriorityTaskWoken;
-    xHigherPriorityTaskWoken = pdFALSE;
-    xQueueSendFromISR(appMsgQueue, &msg, &xHigherPriorityTaskWoken);
-    if (xHigherPriorityTaskWoken) {
-      /* Actual macro used here is port specific. */
-      portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    if( appMsgQueue == NULL ) return;
+    if (in_isr()) {
+        BaseType_t xHigherPriorityTaskWoken;
+        xHigherPriorityTaskWoken = pdFALSE;
+        xQueueSendFromISR(appMsgQueue, &msg, &xHigherPriorityTaskWoken);
+        if (xHigherPriorityTaskWoken) {
+            /* Actual macro used here is port specific. */
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+        }
+    } else {
+        xQueueSend(appMsgQueue, &msg, portMAX_DELAY);
     }
-  } else {
-    xQueueSend(appMsgQueue, &msg, portMAX_DELAY);
-  }
 }

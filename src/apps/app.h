@@ -22,7 +22,8 @@ struct _app {
 };
 
 enum apps {
-     Clock    = 0x01,
+     Clock     = 0x01,
+     Info      = 0x02,
 };
 
 enum appMessages {
@@ -44,11 +45,28 @@ enum appGestures {
      DIR_BOTTOM     = 0x04,
 };
 
+enum RefreshDirections {
+     None      = 0x00,
+     Up        = 0x01,
+     Down      = 0x02,
+     Left      = 0x03,
+     Right     = 0x04,
+};
+
+
+struct pinetimecOSApp {
+     
+     enum appGestures gestureDir;
+     enum RefreshDirections refreshDirection;
+
+     app_t *active_app;
+};
+
+struct pinetimecOSApp pinetimecosapp;
+
 QueueHandle_t appMsgQueue;
 #define QUEUESIZE   10
 #define ITEMSIZE    1
-
-app_t *active_app;
 
 void main_app(void* pvParameter);
 void app_push_message(enum appMessages msg);

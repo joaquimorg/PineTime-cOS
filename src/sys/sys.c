@@ -12,6 +12,7 @@
 #include "rtc.h"
 #include "backlight.h"
 #include "st7789.h"
+#include "battery.h"
 
 /* FreeRTOS related */
 #include "FreeRTOS.h"
@@ -20,8 +21,8 @@
 #include "semphr.h"
 
 
-#define SYS_TASK_DELAY          pdMS_TO_TICKS( 50 )
-#define SYS_TASK_DELAY_SLEEP    pdMS_TO_TICKS( 500 )
+#define SYS_TASK_DELAY          pdMS_TO_TICKS( 100 )
+#define SYS_TASK_DELAY_SLEEP    pdMS_TO_TICKS( 1000 )
 
 TimerHandle_t buttonTimer;
 
@@ -31,7 +32,7 @@ void reload_idle_timer(void) {
 }
 
 void idle_timer_callback(TimerHandle_t xTimer) {
-    if (lv_disp_get_inactive_time(NULL) > 30000) {
+    if (lv_disp_get_inactive_time(NULL) > pinetimecos.displayTimeout) {
         app_push_message(Timeout);
     } else {
         reload_idle_timer();
@@ -104,19 +105,22 @@ static void sys_task_function(void* pvParameter) {
             pinetimecos.chargingState = StatusOFF;
         } else {
             if (pinetimecos.chargingState == StatusOFF) {
-                //app_push_message(Charging);
+                app_push_message(Charging);
+                pinetimecos.chargingState = StatusON;
             }
-            pinetimecos.chargingState = StatusON;
         }
         
         // Read Base Pin State
         if (nrf_gpio_pin_read(CHARGE_BASE_IRQ)) {
             pinetimecos.powerState = StatusOFF;
         } else {
-            pinetimecos.powerState = StatusON;
+            if (pinetimecos.powerState == StatusOFF) {
+                pinetimecos.powerState = StatusON;
+            }
         }
         
         // Read battery voltage
+        battery_read();
 
         // Read step counter
 
@@ -136,6 +140,11 @@ void sys_init(void) {
     pinetimecos.powerState = StatusOFF;
 
     pinetimecos.debug = 0;
+
+    pinetimecos.batteryVoltage = 0.0f;
+    pinetimecos.batteryPercentRemaining = -1;
+
+    pinetimecos.displayTimeout = 30000;
 
     nrf_drv_gpiote_init();
         
@@ -168,11 +177,13 @@ void sys_init(void) {
     lvgl_init();
     backlight_init();
     set_backlight_level(2);
+
+    battery_init();
     
     UNUSED_VARIABLE(xTaskCreate(sys_task_function, "SYS", configMINIMAL_STACK_SIZE + 256, NULL, 2, (TaskHandle_t *) NULL));
     UNUSED_VARIABLE(xTaskCreate(lvgl_task_function, "LVGL", configMINIMAL_STACK_SIZE + 128, NULL, 2, (TaskHandle_t *) NULL));
     UNUSED_VARIABLE(xTaskCreate(main_app, "APP", configMINIMAL_STACK_SIZE + 1024, NULL, 2, (TaskHandle_t *) NULL));
 
-    idleTimer = xTimerCreate ("idleTimer", pdMS_TO_TICKS(30000), pdFALSE, NULL, idle_timer_callback);
+    idleTimer = xTimerCreate ("idleTimer", pdMS_TO_TICKS(pinetimecos.displayTimeout), pdFALSE, NULL, idle_timer_callback);
     
 }
