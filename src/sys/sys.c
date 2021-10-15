@@ -13,6 +13,7 @@
 #include "backlight.h"
 #include "st7789.h"
 #include "battery.h"
+#include "cst816.h"
 
 /* FreeRTOS related */
 #include "FreeRTOS.h"
@@ -21,7 +22,7 @@
 #include "semphr.h"
 
 
-#define SYS_TASK_DELAY          pdMS_TO_TICKS( 100 )
+#define SYS_TASK_DELAY          pdMS_TO_TICKS( 250 )
 #define SYS_TASK_DELAY_SLEEP    pdMS_TO_TICKS( 1000 )
 
 TimerHandle_t buttonTimer;
@@ -53,9 +54,7 @@ static void gpiote_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t a
         return ;
     }
     if (pin == TP_IRQ && action == NRF_GPIOTE_POLARITY_HITOLO) {
-        //app_push_message(TouchPushed);
-        //pinetimecos.debug++;
-        
+        // Touch wakeup...
         return ;
     }
     
@@ -144,7 +143,7 @@ void sys_init(void) {
     pinetimecos.batteryVoltage = 0.0f;
     pinetimecos.batteryPercentRemaining = -1;
 
-    pinetimecos.displayTimeout = 30000;
+    pinetimecos.displayTimeout = 60000;
 
     nrf_drv_gpiote_init();
         

@@ -23,6 +23,9 @@
 #define APP_TASK_DELAY          pdMS_TO_TICKS( 5 )
 #define APP_TASK_DELAY_SLEEP    pdMS_TO_TICKS( 500 )
 
+static lv_obj_t *main_scr;
+static lv_timer_t * app_timer;
+
 void app_push_message(enum appMessages msg);
 
 static void _wdt_kick() {    
@@ -57,9 +60,8 @@ static void gesture_event_cb(lv_event_t * e) {
     if ( pinetimecosapp.gestureDir != DIR_NONE ) {
         app_push_message(Gesture);
     }
+    
 }
-
-lv_timer_t * app_timer;
 
 int app_init(app_t *app, lv_obj_t * parent) {
     return app->spec->init(app, parent);
@@ -74,7 +76,7 @@ int app_close(app_t *app) {
 }
 
 
-void set_refresh_direction(enum RefreshDirections dir) {
+static void set_refresh_direction(enum RefreshDirections dir) {
     pinetimecosapp.refreshDirection = dir;
     if ( dir == Up ) {
         lv_disp_set_direction(lv_disp_get_default(), 0);
@@ -83,26 +85,49 @@ void set_refresh_direction(enum RefreshDirections dir) {
     }
 }
 
-void load_app(app_t *app, lv_obj_t * parent) {
-    if (app == pinetimecosapp.active_app) {
+static void run_app(app_t *app) {
+    if (app == pinetimecosapp.runningApp) {
         return;
     }
     pinetimecos.lvglstate = Sleep;
     lv_timer_pause(app_timer);
-    if (pinetimecosapp.active_app) {
-        UNUSED_VARIABLE(app_close(pinetimecosapp.active_app));
+    if (pinetimecosapp.runningApp) {
+        UNUSED_VARIABLE(app_close(pinetimecosapp.runningApp));
     }
-
-    pinetimecosapp.active_app = app;
-    UNUSED_VARIABLE(app_init(pinetimecosapp.active_app, parent));    
+    pinetimecosapp.runningApp = app;
+    UNUSED_VARIABLE(app_init(pinetimecosapp.runningApp, main_scr));
+    lv_timer_set_period(app_timer, pinetimecosapp.runningApp->spec->updateInterval);
 
     pinetimecos.lvglstate = Running;
     lv_timer_resume(app_timer);    
 }
 
-void update_time(lv_timer_t * timer) {
-    if (pinetimecosapp.active_app) {
-        UNUSED_VARIABLE(app_update(pinetimecosapp.active_app));
+
+static void load_application(enum apps app) {
+    switch (app) {
+
+        case Clock:
+            set_refresh_direction(Up);
+            run_app(APP_CLOCK);
+            pinetimecosapp.returnDir = DIR_NONE;
+            break;
+
+        case Info:
+            set_refresh_direction(Down);
+            run_app(APP_INFO);
+            pinetimecosapp.returnApp = Clock;
+            pinetimecosapp.returnDir = DIR_TOP;
+            break;
+
+        default:
+            break;
+    }
+    pinetimecosapp.activeApp = app;
+}
+
+static void update_time(lv_timer_t * timer) {
+    if (pinetimecosapp.runningApp) {
+        UNUSED_VARIABLE(app_update(pinetimecosapp.runningApp));
     }
 }
 
@@ -111,31 +136,38 @@ void main_app(void* pvParameter) {
 
     enum appMessages msg;
     appMsgQueue = xQueueCreate(QUEUESIZE, ITEMSIZE);
+    pinetimecosapp.runningApp = NULL;
+    
+    main_scr = lv_scr_act();
 
-    lv_obj_t *scr = lv_scr_act();
+    lv_obj_add_event_cb(main_scr, gesture_event_cb, LV_EVENT_PRESSING, NULL);    
 
-    lv_obj_add_event_cb(scr, gesture_event_cb, LV_EVENT_PRESSING, NULL);
+    app_timer = lv_timer_create(update_time, 1000, NULL);
 
-    set_refresh_direction(Up);
-    load_app(APP_CLOCK, scr);
+    load_application(Clock);
 
-    app_timer = lv_timer_create(update_time, 250, NULL);
-
-    xTaskNotifyGive(xTaskGetCurrentTaskHandle());
-
-    pinetimecos.state = Running;
+    //xTaskNotifyGive(xTaskGetCurrentTaskHandle());
 
     init_watchdog();
-
+    pinetimecos.state = Running;
+    pinetimecos.lvglstate = Running;
     while (true) {
    
         if (xQueueReceive(appMsgQueue, &msg, ( TickType_t ) APP_TASK_DELAY)) {
             switch (msg)
             {
                 case Timeout:
-                case ButtonPushed:
                     if(pinetimecos.state == Running) {
                         display_off();
+                    }
+                    break;
+                case ButtonPushed:
+                    if(pinetimecos.state == Running) {
+                        if (pinetimecosapp.activeApp == Clock) {
+                            display_off();
+                        } else {
+                            load_application(pinetimecosapp.returnApp);
+                        }
                     } else {
                         display_on();
                     }
@@ -145,30 +177,22 @@ void main_app(void* pvParameter) {
                         display_on();
                     }
                     break;
-                case TouchPushed:
-                    reload_idle_timer();
-                    break;
                 case Gesture:
-                    switch (pinetimecosapp.gestureDir) {
-                        case DIR_TOP:
-                            if (pinetimecosapp.active_app == APP_INFO ) {
-                                set_refresh_direction(Up);
-                                load_app(APP_CLOCK, scr);
-                            }
-                            break;
 
-                        case DIR_BOTTOM:
-                            if (pinetimecosapp.active_app == APP_CLOCK ) {
-                                set_refresh_direction(Down);
-                                load_app(APP_INFO, scr);
-                            }
-                            break;
-                        
-                        default:
-                            break;
+                    if ( pinetimecosapp.gestureDir == pinetimecosapp.returnDir ) {
+                        load_application(pinetimecosapp.returnApp);
+                    } else if ( pinetimecosapp.activeApp == Clock ) {
+                        switch (pinetimecosapp.gestureDir) {
+                            case DIR_BOTTOM:
+                                load_application(Info);
+                                break;
+                            
+                            default:
+                                break;
+                        }
                     }
+                    
                     pinetimecosapp.gestureDir = DIR_NONE;
-                    //pinetimecos.debug = pinetimecos.gestureDir;
                     break;
                 case UpdateBleConnection:
                     break;

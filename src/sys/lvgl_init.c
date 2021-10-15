@@ -21,6 +21,10 @@ static uint16_t visibleNbLines = 240;
 uint16_t writeOffset = 0;
 uint16_t scrollOffset = 0;
 
+static lv_disp_draw_buf_t draw_buf_dsc;
+static lv_color_t buf_2_1[DISP_HOR_RES * 6];
+static lv_color_t buf_2_2[DISP_HOR_RES * 6];
+
 
 static void touchpad_read(lv_indev_drv_t* drv, lv_indev_data_t* data);
 static void disp_flush(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_t* color_p);
@@ -34,10 +38,7 @@ void lvgl_init(void) {
 
     lv_init();
 
-    static lv_disp_draw_buf_t draw_buf_dsc;
-    static lv_color_t buf_2_1[DISP_HOR_RES * 4];
-    static lv_color_t buf_2_2[DISP_HOR_RES * 4];
-    lv_disp_draw_buf_init(&draw_buf_dsc, buf_2_1, buf_2_2, DISP_HOR_RES * 4);   // Initialize the display buffer
+    lv_disp_draw_buf_init(&draw_buf_dsc, buf_2_1, buf_2_2, DISP_HOR_RES * 6);   // Initialize the display buffer
 
     static lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);    // Basic initialization

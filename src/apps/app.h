@@ -11,6 +11,7 @@
 typedef struct _app app_t;
 typedef struct app_spec {
      const char *name;
+     uint32_t updateInterval;
      int (*init)(app_t *app, lv_obj_t * parent);
      int (*update)(app_t *app);
      int (*close)(app_t *app);
@@ -31,10 +32,9 @@ enum appMessages {
      UpdateBatteryLevel     = 0x02,
      Timeout                = 0x03,
      ButtonPushed           = 0x04,
-     TouchPushed            = 0x05,
-     WakeUp                 = 0x06,
-     Charging               = 0x07,
-     Gesture                = 0x08,
+     WakeUp                 = 0x05,
+     Charging               = 0x06,
+     Gesture                = 0x07,
 };
 
 enum appGestures {
@@ -59,7 +59,10 @@ struct pinetimecOSApp {
      enum appGestures gestureDir;
      enum RefreshDirections refreshDirection;
 
-     app_t *active_app;
+     app_t *runningApp;
+     enum apps returnApp;
+     enum appGestures returnDir;
+     enum apps activeApp;
 };
 
 struct pinetimecOSApp pinetimecosapp;
@@ -70,11 +73,5 @@ QueueHandle_t appMsgQueue;
 
 void main_app(void* pvParameter);
 void app_push_message(enum appMessages msg);
-
-
-int app_init(app_t *app, lv_obj_t * parent);
-int app_update(app_t *app);
-int app_close(app_t *app);
-void load_app(app_t *app, lv_obj_t * parent);
 
 #endif // APP_H

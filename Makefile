@@ -37,6 +37,7 @@ include MakefileV8.lvgl
 SRC_FILES += \
   $(PROJ_DIR)/sys/sys.c \
   $(PROJ_DIR)/sys/utils.c \
+  $(PROJ_DIR)/sys/lvgl_init.c \
   $(PROJ_DIR)/hardware/watchdog.c \
   $(PROJ_DIR)/hardware/backlight.c \
   $(PROJ_DIR)/hardware/battery.c \
@@ -44,7 +45,6 @@ SRC_FILES += \
   $(PROJ_DIR)/hardware/spi_master2.c \
   $(PROJ_DIR)/hardware/st7789.c \
   $(PROJ_DIR)/hardware/cst816.c \
-  $(PROJ_DIR)/hardware/lvgl_init.c \
   $(PROJ_DIR)/theme/lv_theme_pinetime.c \
   $(PROJ_DIR)/theme/lv_font_roboto_24.c \
   $(PROJ_DIR)/theme/lv_font_sys_20.c \

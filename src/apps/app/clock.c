@@ -78,7 +78,11 @@ lv_obj_t *screen_clock_create(clock_app_t *ht, lv_obj_t * parent) {
     lv_obj_set_style_text_color(lv_ble, lv_color_make(0x00, 0x00, 0xff), 0);
     lv_obj_align(lv_ble, LV_ALIGN_TOP_LEFT, 0, 0);
     lv_obj_set_style_text_font(lv_ble, &lv_font_sys_20, 0);
-    lv_label_set_text(lv_ble, "");
+    if ( pinetimecos.bluetoothState == StatusOFF ) {
+        lv_label_set_text(lv_ble, "");
+    } else {
+        lv_label_set_text(lv_ble, "\xEE\xA4\x83");
+    }
 
     ht->lv_ble = lv_ble;
 
@@ -86,7 +90,11 @@ lv_obj_t *screen_clock_create(clock_app_t *ht, lv_obj_t * parent) {
     lv_obj_set_style_text_color(lv_power, lv_color_make(0x00, 0xff, 0x00), 0);
     lv_obj_align(lv_power, LV_ALIGN_TOP_RIGHT, 0, 0);
     lv_obj_set_style_text_font(lv_power, &lv_font_sys_20, 0);
-    lv_label_set_text(lv_power, "\xEE\xA4\x87");
+    if ( pinetimecos.chargingState == StatusOFF ) {
+        lv_label_set_text(lv_power, "\xEE\xA4\x87");
+    } else {
+        lv_label_set_text(lv_power, "\xEE\xA4\x85 \xEE\xA4\x87");
+    }
 
     ht->lv_power = lv_power;
 
@@ -162,6 +170,7 @@ int clock_close(app_t *app) {
 
 static const app_spec_t clock_spec = {
     .name = "clock",
+    .updateInterval = 250,
     .init = clock_init,
     .update = clock_update,
     .close = clock_close,

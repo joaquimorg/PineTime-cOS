@@ -69,6 +69,7 @@ int info_close(app_t *app) {
 
 static const app_spec_t info_spec = {
     .name = "info",
+    .updateInterval = 1000,
     .init = info_init,
     .update = info_update,
     .close = info_close,
