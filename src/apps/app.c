@@ -38,6 +38,8 @@ static void _wdt_kick() {
 
 static void gesture_event_cb(lv_event_t * e) {
 
+    pinetimecos.debug++;
+
     switch (tsData.gesture) {
         case TOUCH_SLIDE_LEFT:
             pinetimecosapp.gestureDir = DIR_LEFT;
@@ -80,8 +82,12 @@ static void set_refresh_direction(enum RefreshDirections dir) {
     pinetimecosapp.refreshDirection = dir;
     if ( dir == Up ) {
         lv_disp_set_direction(lv_disp_get_default(), 0);
-    } else {
+    } else if ( dir == Down ) {
         lv_disp_set_direction(lv_disp_get_default(), 1);
+    } else if ( dir == Left ) {
+        lv_disp_set_direction(lv_disp_get_default(), 2);
+    } else if ( dir == Right ) {
+        lv_disp_set_direction(lv_disp_get_default(), 3);
     }
 }
 
@@ -103,20 +109,28 @@ static void run_app(app_t *app) {
 }
 
 
-static void load_application(enum apps app) {
+static void load_application(enum apps app, enum RefreshDirections dir) {
+
+    set_refresh_direction(dir);
+    pinetimecosapp.returnDirection = dir;
     switch (app) {
 
         case Clock:
-            set_refresh_direction(Up);
             run_app(APP_CLOCK);
             pinetimecosapp.returnDir = DIR_NONE;
             break;
 
         case Info:
-            set_refresh_direction(Down);
             run_app(APP_INFO);
             pinetimecosapp.returnApp = Clock;
             pinetimecosapp.returnDir = DIR_TOP;
+            pinetimecosapp.returnDirection = Up;
+            break;
+        case Info2:
+            run_app(APP_INFO);
+            pinetimecosapp.returnApp = Clock;
+            pinetimecosapp.returnDir = DIR_LEFT;
+            pinetimecosapp.returnDirection = None;
             break;
 
         default:
@@ -144,7 +158,7 @@ void main_app(void* pvParameter) {
 
     app_timer = lv_timer_create(update_time, 1000, NULL);
 
-    load_application(Clock);
+    load_application(Clock, Up);
 
     //xTaskNotifyGive(xTaskGetCurrentTaskHandle());
 
@@ -166,7 +180,7 @@ void main_app(void* pvParameter) {
                         if (pinetimecosapp.activeApp == Clock) {
                             display_off();
                         } else {
-                            load_application(pinetimecosapp.returnApp);
+                            load_application(pinetimecosapp.returnApp, pinetimecosapp.returnDirection);
                         }
                     } else {
                         display_on();
@@ -180,13 +194,15 @@ void main_app(void* pvParameter) {
                 case Gesture:
 
                     if ( pinetimecosapp.gestureDir == pinetimecosapp.returnDir ) {
-                        load_application(pinetimecosapp.returnApp);
+                        load_application(pinetimecosapp.returnApp, pinetimecosapp.returnDirection);
                     } else if ( pinetimecosapp.activeApp == Clock ) {
                         switch (pinetimecosapp.gestureDir) {
                             case DIR_BOTTOM:
-                                load_application(Info);
+                                load_application(Info, Down);
                                 break;
-                            
+                            case DIR_RIGHT:
+                                load_application(Info2, None);
+                                break;
                             default:
                                 break;
                         }

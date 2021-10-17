@@ -17,6 +17,7 @@ typedef struct _clock_app {
     lv_obj_t *lv_date;
     lv_obj_t *lv_ble;
     lv_obj_t *lv_power;
+    lv_obj_t *lv_demo;
     UTCTimeStruct time_old;
 } clock_app_t;
 

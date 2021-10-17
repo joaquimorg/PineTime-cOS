@@ -72,6 +72,7 @@ void lvgl_init(void) {
     //
 
     static lv_indev_drv_t indev_drv;
+
     // Initialize your touchpad if you have
     cst816Init();
 
@@ -135,7 +136,8 @@ static void disp_flush(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_
                 toScroll -= scrollOffset;
                 scrollOffset = (totalNbLines) - toScroll;
             }
-            st7789_vertical_scroll_start_address(scrollOffset);
+            //st7789_vertical_scroll_start_address(scrollOffset);
+            st7789_vertical_scroll_definition(0, 320, 0, scrollOffset);
         }
     } else if(pinetimecosapp.refreshDirection == Up) {
 
@@ -148,7 +150,8 @@ static void disp_flush(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_
                 scrollOffset += height;
             }
             scrollOffset = scrollOffset % totalNbLines;
-            st7789_vertical_scroll_start_address(scrollOffset);
+            //st7789_vertical_scroll_start_address(scrollOffset);
+            st7789_vertical_scroll_definition(0, 320, 0, scrollOffset);
         }
     }
 
@@ -156,23 +159,26 @@ static void disp_flush(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_
         height = totalNbLines - y1;
 
         if ( height > 0 ) {
-            st7789_set_window(area->x1, y1, width, height);
-            st7789_send(0, (uint8_t*)(color_p), (width * height * 2));        
+            //st7789_set_window(area->x1, y1, width, height);
+            //st7789_send(0, (uint8_t*)(color_p), (width * height * 2));        
+            drawBitmap (area->x1, y1, area->x1 + width, y1 + height, (uint8_t*)(color_p));
         }
         
         uint16_t pixOffset = width * height;
 
         height = y2 + 1;
 
-        st7789_set_window(area->x1, 0, width, height);
-        st7789_send(0, (uint8_t*)(color_p + pixOffset), (width * height * 2));
+        //st7789_set_window(area->x1, 0, width, height);
+        //st7789_send(0, (uint8_t*)(color_p + pixOffset), (width * height * 2));
+        drawBitmap (area->x1, 0, area->x1 + width, height, (uint8_t*)(color_p + pixOffset));
 
     } else {
         
-        st7789_set_window(area->x1, y1, width, height);
-        st7789_send(0, (uint8_t*)(color_p), (width * height * 2));
+        //st7789_set_window(area->x1, y1, width, height);
+        //st7789_send(0, (uint8_t*)(color_p), (width * height * 2));
+        drawBitmap (area->x1, y1, area->x1 + width, y1 + height, (uint8_t*)(color_p));
 
     }
-
+    
     lv_disp_flush_ready(disp_drv);
 }

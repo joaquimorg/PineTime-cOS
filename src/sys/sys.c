@@ -180,7 +180,7 @@ void sys_init(void) {
     battery_init();
     
     UNUSED_VARIABLE(xTaskCreate(sys_task_function, "SYS", configMINIMAL_STACK_SIZE + 256, NULL, 2, (TaskHandle_t *) NULL));
-    UNUSED_VARIABLE(xTaskCreate(lvgl_task_function, "LVGL", configMINIMAL_STACK_SIZE + 128, NULL, 2, (TaskHandle_t *) NULL));
+    UNUSED_VARIABLE(xTaskCreate(lvgl_task_function, "LVGL", configMINIMAL_STACK_SIZE + 256, NULL, 2, (TaskHandle_t *) NULL));
     UNUSED_VARIABLE(xTaskCreate(main_app, "APP", configMINIMAL_STACK_SIZE + 1024, NULL, 2, (TaskHandle_t *) NULL));
 
     idleTimer = xTimerCreate ("idleTimer", pdMS_TO_TICKS(pinetimecos.displayTimeout), pdFALSE, NULL, idle_timer_callback);

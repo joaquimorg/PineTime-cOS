@@ -9,6 +9,8 @@
 #include "utils.h"
 #include "lvgl.h"
 
+#include "cst816.h"
+
 static const app_spec_t clock_spec;
 
 clock_app_t clock_app = {
@@ -111,6 +113,14 @@ lv_obj_t *screen_clock_create(clock_app_t *ht, lv_obj_t * parent) {
 
     ht->time_old = time_tmp;
 
+
+    lv_obj_t * lv_debug = lv_label_create(scr);
+    lv_obj_set_style_text_color(lv_debug, lv_color_make(0xff, 0xf, 0xff), 0);
+    lv_obj_align(lv_debug, LV_ALIGN_BOTTOM_LEFT, 0, 0);
+    lv_label_set_text_fmt(lv_debug, "%i", pinetimecos.debug);
+
+    ht->lv_demo = lv_debug;
+
     return scr;
 }
 
@@ -154,6 +164,8 @@ int clock_update(app_t *app) {
     } else {
         lv_label_set_text(ht->lv_power, "\xEE\xA4\x85 \xEE\xA4\x87");
     }
+
+    lv_label_set_text_fmt(ht->lv_demo, "%i", pinetimecos.debug);
 
     ht->time_old = time_tmp;
 
