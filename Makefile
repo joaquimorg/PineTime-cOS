@@ -42,9 +42,9 @@ SRC_FILES += \
   $(PROJ_DIR)/hardware/backlight.c \
   $(PROJ_DIR)/hardware/battery.c \
   $(PROJ_DIR)/hardware/rtc.c \
-  $(PROJ_DIR)/hardware/spi_master2.c \
   $(PROJ_DIR)/hardware/st7789.c \
   $(PROJ_DIR)/hardware/cst816.c \
+  $(PROJ_DIR)/hardware/flash.c \
   $(PROJ_DIR)/theme/lv_theme_pinetime.c \
   $(PROJ_DIR)/theme/lv_font_roboto_24.c \
   $(PROJ_DIR)/theme/lv_font_sys_20.c \
@@ -52,12 +52,19 @@ SRC_FILES += \
   $(PROJ_DIR)/theme/lv_font_clock_90.c \
   $(PROJ_DIR)/apps/app.c \
   $(PROJ_DIR)/nrf_ble/nrf_ble.c \
+  $(PROJ_DIR)/nrf_ble/ble_cmd.c \
   $(PROJ_DIR)/main.c \
 
 # APPS
 SRC_FILES += \
   $(PROJ_DIR)/apps/app/clock.c \
   $(PROJ_DIR)/apps/app/info.c \
+  $(PROJ_DIR)/apps/app/menu.c \
+
+# Resources
+SRC_FILES += \
+  $(PROJ_DIR)/resources/msg.c \
+  
 
 
 # Include

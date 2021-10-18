@@ -158,6 +158,27 @@ void cst816Init(void)
   i2c_Read(TP_TWI_ADDR, 0x15, &tsData.version15, 1);
   nrf_delay_ms(5);
   i2c_Read(TP_TWI_ADDR, 0xa7, tsData.versionInfo, 3);
+
+
+  /*
+  [2] EnConLR - Continuous operation can slide around
+  [1] EnConUD - Slide up and down to enable continuous operation
+  [0] EnDClick - Enable Double-click action
+  */
+  const uint8_t motionMask = 0b00000101;
+  i2c_Write(TP_TWI_ADDR, 0xEC, &motionMask, 1);
+
+
+  /*
+  [7] EnTest interrupt pin test, and automatically send out low pulse periodically after being enabled.
+  [6] When EnTouch detects a touch, it periodically sends out low pulses.
+  [5] When EnChange detects a touch state change, it sends out a low pulse.
+  [4] When EnMotion detects a gesture, it sends out a low pulse.
+  [0] OnceWLP Long press gesture only sends out a low pulse signal.
+  */
+  const uint8_t irqCtl = 0b00010000;
+  i2c_Write(TP_TWI_ADDR, 0xFA, &irqCtl, 1);
+
 }
 
 void cst816Get(void)

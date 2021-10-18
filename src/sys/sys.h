@@ -43,6 +43,8 @@ struct pinetimecOS {
 struct pinetimecOS pinetimecos;
 
 TimerHandle_t idleTimer;
+TimerHandle_t bleTimer;
+
 void reload_idle_timer(void);
 
 void sys_init(void);

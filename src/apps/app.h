@@ -25,7 +25,7 @@ struct _app {
 enum apps {
      Clock     = 0x01,
      Info      = 0x02,
-     Info2     = 0x03,
+     Menu      = 0x03,
 };
 
 enum appMessages {

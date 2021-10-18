@@ -18,6 +18,7 @@
 
 #include "clock.h"
 #include "info.h"
+#include "menu.h"
 
 
 #define APP_TASK_DELAY          pdMS_TO_TICKS( 5 )
@@ -36,9 +37,7 @@ static void _wdt_kick() {
     feed_watchdog();
 }
 
-static void gesture_event_cb(lv_event_t * e) {
-
-    pinetimecos.debug++;
+static void gesture_event_cb(lv_event_t * e) {    
 
     switch (tsData.gesture) {
         case TOUCH_SLIDE_LEFT:
@@ -126,11 +125,11 @@ static void load_application(enum apps app, enum RefreshDirections dir) {
             pinetimecosapp.returnDir = DIR_TOP;
             pinetimecosapp.returnDirection = Up;
             break;
-        case Info2:
-            run_app(APP_INFO);
+        case Menu:
+            run_app(APP_MENU);
             pinetimecosapp.returnApp = Clock;
             pinetimecosapp.returnDir = DIR_LEFT;
-            pinetimecosapp.returnDirection = None;
+            pinetimecosapp.returnDirection = Left;
             break;
 
         default:
@@ -175,6 +174,7 @@ void main_app(void* pvParameter) {
                         display_off();
                     }
                     break;
+
                 case ButtonPushed:
                     if(pinetimecos.state == Running) {
                         if (pinetimecosapp.activeApp == Clock) {
@@ -186,11 +186,13 @@ void main_app(void* pvParameter) {
                         display_on();
                     }
                     break;
+
                 case WakeUp:
                     if(pinetimecos.state == Sleep) {
                         display_on();
                     }
                     break;
+
                 case Gesture:
 
                     if ( pinetimecosapp.gestureDir == pinetimecosapp.returnDir ) {
@@ -201,7 +203,7 @@ void main_app(void* pvParameter) {
                                 load_application(Info, Down);
                                 break;
                             case DIR_RIGHT:
-                                load_application(Info2, None);
+                                load_application(Menu, Right);
                                 break;
                             default:
                                 break;
@@ -210,8 +212,10 @@ void main_app(void* pvParameter) {
                     
                     pinetimecosapp.gestureDir = DIR_NONE;
                     break;
+
                 case UpdateBleConnection:
                     break;
+                    
                 default:
                     break;
             }

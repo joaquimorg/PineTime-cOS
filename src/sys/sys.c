@@ -6,6 +6,7 @@
 #include "lvgl.h"
 #include "lvgl_init.h"
 #include "nrf_ble.h"
+#include "ble_cmd.h"
 #include "utils.h"
 #include "app.h"
 #include "watchdog.h"
@@ -14,6 +15,7 @@
 #include "st7789.h"
 #include "battery.h"
 #include "cst816.h"
+#include "flash.h"
 
 /* FreeRTOS related */
 #include "FreeRTOS.h"
@@ -26,6 +28,11 @@
 #define SYS_TASK_DELAY_SLEEP    pdMS_TO_TICKS( 1000 )
 
 TimerHandle_t buttonTimer;
+
+
+void ble_timer_callback(TimerHandle_t xTimer) {
+    ble_update();
+}
 
 void reload_idle_timer(void) {
   if(pinetimecos.state == Sleep) return;
@@ -54,7 +61,12 @@ static void gpiote_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t a
         return ;
     }
     if (pin == TP_IRQ && action == NRF_GPIOTE_POLARITY_HITOLO) {
-        // Touch wakeup...
+        if(pinetimecos.state == Sleep) {
+            cst816Get();
+            if ( tsData.gesture == TOUCH_DOUBLE_CLICK ) {
+                display_on();
+            }
+        }
         return ;
     }
     
@@ -171,6 +183,8 @@ void sys_init(void) {
     // CHARGE_BASE_IRQ
     nrf_gpio_cfg_input(CHARGE_BASE_IRQ, NRF_GPIO_PIN_NOPULL);
 
+    spiflash_init();
+
     nrf_ble_init();
 
     lvgl_init();
@@ -179,10 +193,12 @@ void sys_init(void) {
 
     battery_init();
     
-    UNUSED_VARIABLE(xTaskCreate(sys_task_function, "SYS", configMINIMAL_STACK_SIZE + 256, NULL, 2, (TaskHandle_t *) NULL));
-    UNUSED_VARIABLE(xTaskCreate(lvgl_task_function, "LVGL", configMINIMAL_STACK_SIZE + 256, NULL, 2, (TaskHandle_t *) NULL));
-    UNUSED_VARIABLE(xTaskCreate(main_app, "APP", configMINIMAL_STACK_SIZE + 1024, NULL, 2, (TaskHandle_t *) NULL));
+    UNUSED_VARIABLE(xTaskCreate(sys_task_function, "SYS", configMINIMAL_STACK_SIZE, NULL, 2, (TaskHandle_t *) NULL));
+    UNUSED_VARIABLE(xTaskCreate(lvgl_task_function, "LVGL", configMINIMAL_STACK_SIZE, NULL, 2, (TaskHandle_t *) NULL));
+    UNUSED_VARIABLE(xTaskCreate(main_app, "APP", configMINIMAL_STACK_SIZE + 512, NULL, 2, (TaskHandle_t *) NULL));
 
     idleTimer = xTimerCreate ("idleTimer", pdMS_TO_TICKS(pinetimecos.displayTimeout), pdFALSE, NULL, idle_timer_callback);
+
+    bleTimer = xTimerCreate ("bleTimer", pdMS_TO_TICKS(30000), pdTRUE, NULL, ble_timer_callback);
     
 }

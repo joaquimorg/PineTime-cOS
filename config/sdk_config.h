@@ -5382,7 +5382,7 @@
 // <8=> 256x 
 
 #ifndef SAADC_CONFIG_OVERSAMPLE
-#define SAADC_CONFIG_OVERSAMPLE 0
+#define SAADC_CONFIG_OVERSAMPLE 2
 #endif
 
 // <q> SAADC_CONFIG_LP_MODE  - Enabling low power mode

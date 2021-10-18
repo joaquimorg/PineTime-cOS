@@ -167,6 +167,14 @@ void cmd_enable(bool enabled) {
     }
 }
 
+void display_pause() {
+    cmd_enable(0);
+    nrf_gpio_pin_write(LCD_CSN, 1);
+}
+void display_resume() {
+    cmd_enable(1);
+    nrf_gpio_pin_write(LCD_CSN, 0);
+}
 
 void st7789_set_window(uint32_t x, uint32_t y, uint32_t w, uint32_t h) {
   
@@ -291,7 +299,7 @@ void st7789_wake_up(void) {
 }
 
 
-void drawSquare(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color) {
+void draw_square(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color) {
     ppi_set();
 
     int maxLength = 254; 
@@ -359,7 +367,7 @@ void drawSquare(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t col
 }
 
 
-void drawBitmap (uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t* bitmap) {
+void draw_bitmap (uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t* bitmap) {
     //nrf_gpio_pin_clear(LCD_CSN);
     ppi_set();
 
@@ -517,11 +525,9 @@ void st7789_init(void) {
 
     cmd_enable(1);
 
-    st7789_vertical_scroll_definition(0, 320, 0, 0);
-    //st7789_vertical_scroll_start_address(0);
+    st7789_vertical_scroll_definition(0, 320, 0, 0);    
 
-    drawSquare(0, 0, 239, 239, RGB2COLOR(0x00, 0x00, 0x00));
+    draw_square(0, 0, 239, 239, RGB2COLOR(0x00, 0x00, 0x00));
 
-    //nrf_gpio_pin_set(LCD_CSN);
 }
 

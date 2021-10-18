@@ -24,58 +24,61 @@
 #define VIN_MEAS_R26 1000 + 50  // 1000kOhm +- 5% + error correction
 #define VIN_MEAS_R35 1000       // 1000kOhm +- 5%
 
-static nrf_saadc_value_t adc_buf;
+#define SAMPLES_IN_BUFFER 5
+static nrf_saadc_value_t     m_buffer_pool[2][SAMPLES_IN_BUFFER];
 
-/**
- * Symmetric sigmoidal approximation
- * https://www.desmos.com/calculator/7m9lu26vpy
- *
- * c - c / (1 + k*x/v)^3
- */
-uint8_t sigmoidal(uint16_t voltage, uint16_t minVoltage, uint16_t maxVoltage) {
-	// slow
-	// uint8_t result = 110 - (110 / (1 + pow(1.468 * (voltage - minVoltage)/(maxVoltage - minVoltage), 6)));
+#define VOLTAGE_DIVISIONS 21 
+static const float generic_lipo[VOLTAGE_DIVISIONS] = 
+    { 3.27, 3.61, 3.69, 3.71, 3.73, 3.75, 3.77, 3.79, 3.8, 3.82, 3.84, 3.85, 3.87, 3.91, 3.95, 3.98, 4.02, 4.08, 4.11, 4.15, 4.2 }; // Voltage
 
-	// steep
-	// uint8_t result = 102 - (102 / (1 + pow(1.621 * (voltage - minVoltage)/(maxVoltage - minVoltage), 8.1)));
 
-	// normal
-	uint8_t result = 105 - (105 / (1 + pow(1.724 * (voltage - minVoltage)/(maxVoltage - minVoltage), 5.5)));
-	return result >= 100 ? 100 : result;
+static int charge_at_index (int i) {
+    return i*5;
 }
 
-void saadc_callback(nrf_drv_saadc_evt_t const * p_event) {
+static int voltage_percentage(float battery_voltage) {
+    int i = 0;
 
-    const uint16_t battery_max = 4150; // maximum voltage of battery ( max charging voltage is 4.21 )
-	const uint16_t battery_min = 3200; // minimum voltage of battery before shutdown ( depends on the battery )
+    if (generic_lipo[0] > battery_voltage) return 0; // voltage below charts
+
+    while (i < VOLTAGE_DIVISIONS) {
+      if (generic_lipo[i] < battery_voltage) i++;
+      else {
+        // Scanner found the correct
+        float m = (charge_at_index(i) - charge_at_index(i-1))/(generic_lipo[i] - generic_lipo[i-1]);
+        float c = charge_at_index(i) - (m * generic_lipo[i]);
+
+        return (int)(battery_voltage * m + c);
+      }
+    }
+
+    return 100; // Voltage over chart
+}
+
+
+static void saadc_callback(nrf_drv_saadc_evt_t const * p_event) {
 
     if (p_event->type == NRF_DRV_SAADC_EVT_DONE) {
 
-        nrf_saadc_value_t adc_result;
+        nrf_saadc_value_t adc_result = 0;
 
-        adc_result = p_event->data.done.p_buffer[0];
+        ret_code_t err_code = nrf_drv_saadc_buffer_convert(p_event->data.done.p_buffer, SAMPLES_IN_BUFFER);
+        APP_ERROR_CHECK(err_code);
 
-    
+        for (uint8_t i = 0; i < SAMPLES_IN_BUFFER; i++) {
+
+            adc_result += p_event->data.done.p_buffer[i];
+        }
+        adc_result = adc_result / SAMPLES_IN_BUFFER;
+
         // Voltage divider ratio
 		//(R26 + R35) / R35
 		uint16_t value = (VIN_MEAS_R26 + VIN_MEAS_R35) * adc_result / VIN_MEAS_R35;
 
         pinetimecos.batteryVoltage = ADC_RESULT_IN_MILLI_VOLTS(value);
 
-        if (pinetimecos.batteryVoltage <= battery_min) {
-			pinetimecos.batteryPercentRemaining = 0;
-		} else if (pinetimecos.batteryVoltage >= battery_max) {
-			pinetimecos.batteryPercentRemaining = 100;
-		} else {
-			pinetimecos.batteryPercentRemaining = sigmoidal(pinetimecos.batteryVoltage, battery_min, battery_max);
-            if (pinetimecos.batteryVoltage <= 0) {
-			    pinetimecos.batteryPercentRemaining = 0;
-		    } else if (pinetimecos.batteryVoltage >= 100) {
-			    pinetimecos.batteryPercentRemaining = 100;
-		    }
-
-		}
-
+        pinetimecos.batteryPercentRemaining = voltage_percentage((float)pinetimecos.batteryVoltage / 1000);
+        
     }
 }
 
@@ -87,23 +90,21 @@ void battery_init(void) {
     err_code = nrf_drv_saadc_init(NULL, saadc_callback);
     APP_ERROR_CHECK(err_code);
 
+    //channel_config.burst = NRF_SAADC_BURST_ENABLED;
     err_code = nrf_drv_saadc_channel_init(0, &channel_config);
     APP_ERROR_CHECK(err_code);
 
-    err_code = nrf_drv_saadc_buffer_convert(&adc_buf, 1);
+    err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[0], SAMPLES_IN_BUFFER);
     APP_ERROR_CHECK(err_code);
 
-    err_code = nrf_drv_saadc_sample();
+    err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[1], SAMPLES_IN_BUFFER);
     APP_ERROR_CHECK(err_code);
+
 }
 
 void battery_read(void) {
 
-    if (!nrf_drv_saadc_is_busy()) {
-        ret_code_t err_code = nrf_drv_saadc_buffer_convert(&adc_buf, 1);
-        APP_ERROR_CHECK(err_code);
+    ret_code_t err_code = nrf_drv_saadc_sample();
+    APP_ERROR_CHECK(err_code);
 
-        err_code = nrf_drv_saadc_sample();
-        APP_ERROR_CHECK(err_code);
-    }
 }

@@ -21,40 +21,43 @@ static void on_error( uint8_t err ) {
 
     //NRF_BREAKPOINT_COND;
 
-    //NVIC_SystemReset();
+    //NVIC_SystemReset();    
     
     for (;;)
     {
-        for (uint8_t i = 0; i < err; i++)
+        /*for (uint8_t i = 0; i < err; i++)
         {
             nrf_delay_ms(200);
             nrf_gpio_pin_clear(LCD_LIGHT_1);
             nrf_delay_ms(200);
             nrf_gpio_pin_set(LCD_LIGHT_1);
-        }
+        }*/
+        
         nrf_delay_ms(1000);
     }
 }
 
 void assert_nrf_callback(uint16_t line_num, const uint8_t* p_file_name) {
-    NRF_LOG_ERROR("%s:%d", p_file_name, line_num);
+    //NRF_LOG_ERROR("%s:%d", p_file_name, line_num);
     on_error(1);
 }
 
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name) {
-    NRF_LOG_ERROR("%s:%d", p_file_name, line_num);
+    //NRF_LOG_ERROR("%s:%d", p_file_name, line_num);
+    pinetimecos.debug = error_code;
     on_error(2);
 }
 
 
 void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info) {
-    NRF_LOG_ERROR("Received a fault! id: 0x%08x, pc: 0x%08x, info: 0x%08x", id, pc, info);
+    //NRF_LOG_ERROR("Received a fault! id: 0x%08x, pc: 0x%08x, info: 0x%08x", id, pc, info);
     on_error(3);
 }
 
 
 void app_error_handler_bare(uint32_t error_code) {
-    NRF_LOG_ERROR("Received an error: 0x%08x!", error_code);
+    //NRF_LOG_ERROR("Received an error: 0x%08x!", error_code);
+    pinetimecos.debug = error_code;
     on_error(4);
 }
 

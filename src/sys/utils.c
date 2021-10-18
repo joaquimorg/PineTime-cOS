@@ -2,7 +2,6 @@
 #include <stdint.h>
 
 #include "utils.h"
-#include "sys.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "nrf_gpio.h"
@@ -58,32 +57,4 @@ const char* actual_reset_reason(void) {
   if ((reason >> 19u) & 0x01u)
     return "NFC";
   return "Hard reset";
-}
-
-// -----------------------------------------------------------------------------------------
-
-void ble_command(uint8_t msg_type) {
-    uint32_t gTimestamp;
-    
-    switch (msg_type) {
-        case COMMAND_TIME_UPDATE:
-
-            gTimestamp = 
-                (inputBuffer[3]) |
-                (inputBuffer[2]) << 8 |
-                (inputBuffer[1]) << 16 |
-                (inputBuffer[0]) << 24;
-
-            rtc_set_time(gTimestamp);
-            break;
-        
-        case COMMAND_NOTIFICATION:
-        case COMMAND_WEATHER:
-            app_push_message(WakeUp);
-            break;
-        default:
-            app_push_message(WakeUp);
-            break;
-    }
-
 }

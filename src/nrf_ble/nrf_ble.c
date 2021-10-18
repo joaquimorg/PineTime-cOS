@@ -33,7 +33,7 @@
 #include "semphr.h"
 #include "sys.h"
 #include "app.h"
-#include "utils.h"
+#include "ble_cmd.h"
 
 #define SYS_TASK_DELAY        1 
 TaskHandle_t  sys_task_handle;
@@ -78,6 +78,7 @@ static ble_uuid_t m_adv_uuids[] =                                          /**< 
 
 uint8_t inputEnd = 1, inputSize = 0;
 uint16_t msgSize = 0;
+uint8_t msgType = 0;
 
 static void advertising_start(void* p_context);
 
@@ -111,43 +112,67 @@ static void nrf_qwr_error_handler(uint32_t nrf_error) {
 
 static void nus_data_handler(ble_nus_evt_t* p_evt) {
 
-    uint8_t msgType = 0;
     uint8_t msgStart = 0;
 
-    if (p_evt->type == BLE_NUS_EVT_RX_DATA) {
-        //NRF_LOG_DEBUG("Received data from BLE NUS.");
-        //NRF_LOG_HEXDUMP_DEBUG(p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
+    switch (p_evt->type) {
+        case BLE_NUS_EVT_RX_DATA:
+        {
+            // rx[0] = 0x01 - init
+            // rx[1] = 0xxx - message type
+            // rx[2] = 0x00 - message size
+            // rx[3] = 0x00 - message size - header
+            // rx[4] = 0xxx - message
+            // rx[..] = 0xxx - message
 
-        // criar um buffer para juntar todo o que foi enviado 
+            // New Message ?
+            if ( inputEnd == 1 && p_evt->params.rx_data.p_data[0] == COMMAND_BASE ) {
+                inputEnd = 0;
+                msgType = p_evt->params.rx_data.p_data[1];
+                msgSize = p_evt->params.rx_data.p_data[2];            
+                msgStart = 4;
+            }
 
-        // rx[0] = 0x01 - init
-        // rx[1] = 0xxx - message type
-        // rx[2] = 0x00 - message size
-        // rx[3] = 0x00 - message size - header
-        // rx[4] = 0xxx - message
-        // rx[..] = 0xxx - message
+            for (uint32_t i = msgStart; i < p_evt->params.rx_data.length; i++) {
+                inputBuffer[inputSize++] = p_evt->params.rx_data.p_data[i];
+            }
 
-        // New Message ?
-        if ( inputEnd == 1 && p_evt->params.rx_data.p_data[0] == COMMAND_BASE ) {
-            inputEnd = 0;
-            msgType = p_evt->params.rx_data.p_data[1];
-            msgSize = p_evt->params.rx_data.p_data[2];            
-            msgStart = 4;
+            if ( inputSize >= msgSize && inputEnd == 0 ) {
+                inputEnd = 1;
+                inputSize = 0;
+                msgSize = 0;
+                // call function to evalute received msg
+                ble_command(msgType);
+                msgType = 0;
+            }
+            break;
         }
 
-        for (uint32_t i = msgStart; i < p_evt->params.rx_data.length; i++) {
-            inputBuffer[inputSize++] = p_evt->params.rx_data.p_data[i];
-        }
+        case BLE_NUS_EVT_COMM_STARTED:
+            ble_connection();
+            break;
 
-        if ( inputSize >= msgSize && inputEnd == 0 ) {
-            inputEnd = 1;
-            // call function to evalute received msg
-            ble_command(msgType);
-            inputSize = 0;
-        }
-        //UNUSED_PARAMETER(msgType);
-        
+        default:
+            break;
     }
+
+}
+
+void send_data_ble(uint8_t * data, uint16_t size) {
+    uint32_t       err_code;
+
+    uint16_t length = size;
+
+    do {       
+        err_code = ble_nus_data_send(&m_nus, data, (uint16_t*)&length, m_conn_handle);
+        if ((err_code != NRF_ERROR_INVALID_STATE) &&
+            (err_code != NRF_ERROR_RESOURCES) &&
+            (err_code != NRF_ERROR_NOT_FOUND))
+        {
+            APP_ERROR_CHECK(err_code);
+        }
+    } while (err_code == NRF_ERROR_RESOURCES);
+
+    APP_ERROR_CHECK(err_code);
 
 }
 

@@ -7,6 +7,7 @@
 #include "app.h"
 #include "sys.h"
 #include "utils.h"
+#include "ble_cmd.h"
 #include "lvgl.h"
 
 #include "cst816.h"
@@ -101,23 +102,28 @@ lv_obj_t *screen_clock_create(clock_app_t *ht, lv_obj_t * parent) {
     ht->lv_power = lv_power;
 
 
-    lv_obj_t * lv_time_sec = lv_label_create(scr);
-    lv_label_set_long_mode(lv_time_sec, LV_LABEL_LONG_SCROLL_CIRCULAR);     /*Circular scroll*/
+    /*lv_obj_t * lv_time_sec = lv_label_create(scr);
+    lv_label_set_long_mode(lv_time_sec, LV_LABEL_LONG_SCROLL_CIRCULAR);     
     lv_label_set_text(lv_time_sec, "It is a circularly scrolling text. is big....");
     lv_obj_set_width(lv_time_sec, 220);
     //lv_obj_set_style_text_align(lv_time_sec, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_color(lv_time_sec, lv_color_make(0xaf, 0xaf, 0xaf), 0);
     lv_obj_align(lv_time_sec, LV_ALIGN_CENTER, 0, 75);
 
-    ht->lv_time_sec = lv_time_sec;
+    ht->lv_time_sec = lv_time_sec;*/
 
     ht->time_old = time_tmp;
 
 
     lv_obj_t * lv_debug = lv_label_create(scr);
     lv_obj_set_style_text_color(lv_debug, lv_color_make(0xff, 0xf, 0xff), 0);
-    lv_obj_align(lv_debug, LV_ALIGN_BOTTOM_LEFT, 0, 0);
-    lv_label_set_text_fmt(lv_debug, "%i", pinetimecos.debug);
+    lv_obj_align(lv_debug, LV_ALIGN_BOTTOM_LEFT, 0, -25);
+    lv_obj_set_width(lv_debug, 240);
+    lv_label_set_long_mode(lv_debug, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    if ( pinetimecosBLE.weather.hasData )
+        lv_label_set_text_fmt(lv_debug, "%s - %s, %i°C ", pinetimecosBLE.weather.location, pinetimecosBLE.weather.currentCondition, pinetimecosBLE.weather.currentTemp);
+    else 
+        lv_label_set_text(lv_debug, "");
 
     ht->lv_demo = lv_debug;
 
@@ -165,7 +171,10 @@ int clock_update(app_t *app) {
         lv_label_set_text(ht->lv_power, "\xEE\xA4\x85 \xEE\xA4\x87");
     }
 
-    lv_label_set_text_fmt(ht->lv_demo, "%i", pinetimecos.debug);
+    if ( pinetimecosBLE.weather.hasData )
+        lv_label_set_text_fmt(ht->lv_demo, "%s - %s, %i°C ", pinetimecosBLE.weather.location, pinetimecosBLE.weather.currentCondition, pinetimecosBLE.weather.currentTemp);
+    else 
+        lv_label_set_text(ht->lv_demo, "");
 
     ht->time_old = time_tmp;
 
