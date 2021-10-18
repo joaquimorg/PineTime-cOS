@@ -24,6 +24,7 @@ The **Pinetime** smartwatch is built around the NRF52832 MCU (512KB Flash, 64KB 
 
 PineTime-cOS 
 ========================================
+<img src="images/pinetime_cos.jpg" />
 
 The purpose of **PineTime-cOS** is to build a firmware for Pinetime that is lightweight:
 
