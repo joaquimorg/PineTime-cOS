@@ -39,19 +39,19 @@ enum appMessages {
 };
 
 enum appGestures {
-     DIR_NONE       = 0x00,
-     DIR_LEFT       = 0x01,     
-     DIR_RIGHT      = 0x02,
-     DIR_TOP        = 0x03,
-     DIR_BOTTOM     = 0x04,
+     DirNone       = 0x00,
+     DirLeft       = 0x01,     
+     DirRight      = 0x02,
+     DirTop        = 0x03,
+     DirBottom     = 0x04,
 };
 
 enum RefreshDirections {
-     None      = 0x00,
-     Up        = 0x01,
-     Down      = 0x02,
-     Left      = 0x03,
-     Right     = 0x04,
+     AnimNone      = 0x00,
+     AnimUp        = 0x01,
+     AnimDown      = 0x02,
+     AnimLeft      = 0x03,
+     AnimRight     = 0x04,
 };
 
 
@@ -63,7 +63,7 @@ struct pinetimecOSApp {
      app_t *runningApp;
      enum apps returnApp;
      enum appGestures returnDir;
-     enum RefreshDirections returnDirection;
+     enum RefreshDirections returnAnimation;
      enum apps activeApp;
 };
 

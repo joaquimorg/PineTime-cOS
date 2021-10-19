@@ -41,6 +41,7 @@ typedef struct _weather {
     char *      location;
     char *      currentCondition;
     bool        hasData;
+    bool        newData;
 } weather_t;
 
 struct pinetimecOSBle {

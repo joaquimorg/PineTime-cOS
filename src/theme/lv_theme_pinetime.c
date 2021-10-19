@@ -17,13 +17,13 @@ typedef struct {
     lv_style_t pressed;
     lv_style_t disabled;
     lv_style_t pad_zero;
-} my_theme_styles_t;
+} pt_theme_styles_t;
 
 
 static void style_init_reset(lv_style_t * style);
 static void theme_apply(struct _lv_theme_t *, lv_obj_t *);
 
-static my_theme_styles_t * styles;
+static pt_theme_styles_t * styles;
 static bool inited;
 
 
@@ -68,14 +68,14 @@ static void style_init(void)
     lv_style_set_arc_color(&styles->light, COLOR_MID);
 
     style_init_reset(&styles->dark);
-    lv_style_set_radius(&styles->dark, 12);
-    lv_style_set_text_color(&styles->dark, lv_color_make(0x0, 0x0, 0x0));
+    lv_style_set_radius(&styles->dark, 16);
+    lv_style_set_text_color(&styles->dark, lv_color_make(0x00, 0x00, 0x00));
     lv_style_set_bg_opa(&styles->dark, LV_OPA_COVER);
     lv_style_set_bg_color(&styles->dark, COLOR_DARK);
     lv_style_set_border_color(&styles->dark, COLOR_DIM);
-    lv_style_set_border_width(&styles->dark, 1);
-    lv_style_set_pad_all(&styles->dark, 8);
-    lv_style_set_pad_gap(&styles->dark, 8);
+    lv_style_set_border_width(&styles->dark, 0);
+    lv_style_set_pad_all(&styles->dark, 12);
+    //lv_style_set_pad_gap(&styles->dark, 14);
     lv_style_set_line_width(&styles->dark, LV_DPX(2));
     lv_style_set_line_color(&styles->dark, COLOR_DIM);
     lv_style_set_arc_width(&styles->dark, LV_DPX(2));
@@ -86,7 +86,7 @@ static void style_init(void)
 
     style_init_reset(&styles->pressed);
     lv_style_set_color_filter_dsc(&styles->pressed, &dark_filter);
-    lv_style_set_color_filter_opa(&styles->pressed, 35);
+    lv_style_set_color_filter_opa(&styles->pressed, LV_OPA_70);
 
     static lv_color_filter_dsc_t grey_filter;
     lv_color_filter_dsc_init(&grey_filter, grey_filter_cb);
@@ -104,8 +104,8 @@ static void style_init(void)
 void lv_theme_pinetime_init(lv_theme_t *theme) {
 
     if(!inited) {
-        LV_GC_ROOT(_lv_theme_default_styles) = lv_mem_alloc(sizeof(my_theme_styles_t));
-        styles = (my_theme_styles_t *)LV_GC_ROOT(_lv_theme_default_styles);
+        LV_GC_ROOT(_lv_theme_default_styles) = lv_mem_alloc(sizeof(pt_theme_styles_t));
+        styles = (pt_theme_styles_t *)LV_GC_ROOT(_lv_theme_default_styles);
     }
 
     theme->font_small = LV_FONT_DEFAULT;

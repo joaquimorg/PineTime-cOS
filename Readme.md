@@ -43,3 +43,9 @@ $ cd PineTime-cOS
 $ make -j
 </pre>
 
+Docs
+========================================
+
+Nordic's Secure DFU bootloader, a step by step guide
+
+https://devzone.nordicsemi.com/nordic/short-range-guides/b/software-development-kit/posts/getting-started-with-nordics-secure-dfu-bootloader

@@ -27,7 +27,7 @@ lv_obj_t *screen_menu_create(menu_app_t *ht, lv_obj_t * parent) {
     lv_obj_clear_flag(scr, LV_OBJ_FLAG_SCROLL_ELASTIC);
     lv_obj_remove_style_all(scr);                            /*Make it transparent*/
     lv_obj_set_size(scr, lv_pct(100), lv_pct(100));
-    lv_obj_set_scroll_snap_y(scr, LV_SCROLL_SNAP_CENTER);    /*Snap the children to the center*/
+    //lv_obj_set_scroll_snap_y(scr, LV_SCROLL_SNAP_CENTER);    /*Snap the children to the center*/
 
     //lv_obj_t *scr = parent;
 

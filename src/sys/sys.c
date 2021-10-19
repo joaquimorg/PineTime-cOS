@@ -76,28 +76,6 @@ void vApplicationTickHook(void) {
 
 }
 
-
-static void lvgl_task_function(void* pvParameter) { 
-
-    UNUSED_PARAMETER(pvParameter);
-
-    while (true) {
-        
-        if(pinetimecos.state == Running) { 
-            if (pinetimecos.lvglstate == Running) {
-                lv_tick_inc(5);
-                //lv_timer_handler();
-            }
-            
-        }
-        vTaskDelay(pdMS_TO_TICKS( 2 ));
-        
-    } 
-
-    vTaskDelete(NULL); 
-}
-
-
 static void sys_task_function(void* pvParameter) {
 
     UNUSED_PARAMETER(pvParameter);
@@ -159,7 +137,8 @@ void sys_init(void) {
 
     nrf_drv_gpiote_init();
         
-    rtc_init();    
+    rtc_init();
+    nrf_ble_init();
 
     // Button
     buttonTimer = xTimerCreate ("buttonTimer", 300, pdFALSE, (void *) 0, button_timer_callback);
@@ -185,20 +164,16 @@ void sys_init(void) {
 
     spiflash_init();
 
-    nrf_ble_init();
-
     lvgl_init();
     backlight_init();
     set_backlight_level(2);
 
     battery_init();
     
-    UNUSED_VARIABLE(xTaskCreate(sys_task_function, "SYS", configMINIMAL_STACK_SIZE, NULL, 2, (TaskHandle_t *) NULL));
-    UNUSED_VARIABLE(xTaskCreate(lvgl_task_function, "LVGL", configMINIMAL_STACK_SIZE, NULL, 2, (TaskHandle_t *) NULL));
-    UNUSED_VARIABLE(xTaskCreate(main_app, "APP", configMINIMAL_STACK_SIZE + 512, NULL, 2, (TaskHandle_t *) NULL));
-
     idleTimer = xTimerCreate ("idleTimer", pdMS_TO_TICKS(pinetimecos.displayTimeout), pdFALSE, NULL, idle_timer_callback);
-
     bleTimer = xTimerCreate ("bleTimer", pdMS_TO_TICKS(30000), pdTRUE, NULL, ble_timer_callback);
+
+    UNUSED_VARIABLE(xTaskCreate(sys_task_function, "SYS", configMINIMAL_STACK_SIZE + 256, NULL, 2, (TaskHandle_t *) NULL));
+    UNUSED_VARIABLE(xTaskCreate(main_app, "APP", configMINIMAL_STACK_SIZE + 1024, NULL, 2, (TaskHandle_t *) NULL));
     
 }

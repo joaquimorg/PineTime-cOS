@@ -107,9 +107,9 @@ static void disp_flush(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_
 
     uint16_t y1, y2, width, height = 0;
 
-    if( (pinetimecosapp.refreshDirection == Down) && (area->y2 == visibleNbLines - 1)) {
+    if( (pinetimecosapp.refreshDirection == AnimDown) && (area->y2 == visibleNbLines - 1)) {
         writeOffset = ((writeOffset + totalNbLines) - visibleNbLines) % totalNbLines;
-    } else if( (pinetimecosapp.refreshDirection == Up) && (area->y1 == 0) ) {
+    } else if( (pinetimecosapp.refreshDirection == AnimUp) && (area->y1 == 0) ) {
         writeOffset = (writeOffset + visibleNbLines) % totalNbLines;
     }
 
@@ -119,12 +119,12 @@ static void disp_flush(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_
     width = (area->x2 - area->x1) + 1;
     height = (area->y2 - area->y1) + 1;
 
-    if ( pinetimecosapp.refreshDirection == Down ) {
+    if ( pinetimecosapp.refreshDirection == AnimDown ) {
         if(area->y2 < visibleNbLines - 1) {
             uint16_t toScroll = 0;
                 if(area->y1 == 0) {
                 toScroll = height * 2;
-                pinetimecosapp.refreshDirection = None;
+                pinetimecosapp.refreshDirection = AnimNone;
                 lv_disp_set_direction(lv_disp_get_default(), 0);
             } else {
                 toScroll = height;
@@ -138,12 +138,12 @@ static void disp_flush(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_
             }
             st7789_vertical_scroll_definition(0, 320, 0, scrollOffset);
         }
-    } else if(pinetimecosapp.refreshDirection == Up) {
+    } else if(pinetimecosapp.refreshDirection == AnimUp) {
 
         if(area->y1 > 0) {
             if(area->y2 == visibleNbLines - 1) {
                 scrollOffset += (height * 2);
-                pinetimecosapp.refreshDirection = None;
+                pinetimecosapp.refreshDirection = AnimNone;
                 lv_disp_set_direction(lv_disp_get_default(), 0);
             } else {
                 scrollOffset += height;
@@ -151,14 +151,14 @@ static void disp_flush(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_
             scrollOffset = scrollOffset % totalNbLines;
             st7789_vertical_scroll_definition(0, 320, 0, scrollOffset);
         }
-    } else if(pinetimecosapp.refreshDirection == Left) {
+    } else if(pinetimecosapp.refreshDirection == AnimLeft) {
         if(area->x2 == visibleNbLines - 1) {
-            pinetimecosapp.refreshDirection = None;
+            pinetimecosapp.refreshDirection = AnimNone;
             lv_disp_set_direction(lv_disp_get_default(), 0);
         }
-    } else if(pinetimecosapp.refreshDirection == Right) {
+    } else if(pinetimecosapp.refreshDirection == AnimRight) {
         if(area->x1 == 0) {
-            pinetimecosapp.refreshDirection = None;
+            pinetimecosapp.refreshDirection = AnimNone;
             lv_disp_set_direction(lv_disp_get_default(), 0);
         }
     }

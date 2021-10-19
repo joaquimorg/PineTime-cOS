@@ -126,6 +126,7 @@ static void get_weather(void) {
     memcpy(pinetimecosBLE.weather.currentCondition, (char *) &inputBuffer[i], size);
     
     pinetimecosBLE.weather.hasData = true;
+    pinetimecosBLE.weather.newData = true;
 }
 
 void ble_command(uint8_t msg_type) {
@@ -205,6 +206,7 @@ void ble_send_battery(void) {
 
 void ble_connection(void) {
     pinetimecosBLE.weather.hasData = false;
+    pinetimecosBLE.weather.newData = false;
 
     ble_send_version();
     ble_send_battery();

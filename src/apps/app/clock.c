@@ -1,5 +1,3 @@
-
-
 #include <stdint.h>
 #include <stddef.h>
 #include "clock.h"
@@ -9,8 +7,6 @@
 #include "utils.h"
 #include "ble_cmd.h"
 #include "lvgl.h"
-
-#include "cst816.h"
 
 static const app_spec_t clock_spec;
 
@@ -32,11 +28,11 @@ lv_obj_t *screen_clock_create(clock_app_t *ht, lv_obj_t * parent) {
     lv_obj_clear_flag(scr, LV_OBJ_FLAG_SCROLL_ELASTIC);
     lv_obj_remove_style_all(scr);                            /*Make it transparent*/
     lv_obj_set_size(scr, lv_pct(100), lv_pct(100));
-    lv_obj_set_scroll_snap_y(scr, LV_SCROLL_SNAP_CENTER);    /*Snap the children to the center*/
+    //lv_obj_set_scroll_snap_y(scr, LV_SCROLL_SNAP_CENTER);    /*Snap the children to the center*/
 
     //lv_obj_t *scr = lv_scr_act();
 
-    lv_obj_set_style_bg_color(scr, lv_color_hex(0x040404), 0);
+    lv_obj_set_style_bg_color(scr, lv_color_hex(0x000000), 0);
 
     get_UTC_time(&time_tmp);
 
@@ -53,7 +49,7 @@ lv_obj_t *screen_clock_create(clock_app_t *ht, lv_obj_t * parent) {
     lv_obj_set_style_text_font(lv_timem, &lv_font_clock_90, 0);
     lv_label_set_text_fmt(lv_timem, "%02i", time_tmp.minutes);
     lv_obj_set_style_text_align(lv_timem, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_color(lv_timem, lv_color_make(0xff, 0xff, 0xff), 0);
+    lv_obj_set_style_text_color(lv_timem, lv_color_make(0x00, 0xff, 0x00), 0);
     lv_obj_align(lv_timem, LV_ALIGN_CENTER, 55, -40);
 
     ht->lv_timem = lv_timem;
@@ -62,7 +58,7 @@ lv_obj_t *screen_clock_create(clock_app_t *ht, lv_obj_t * parent) {
     lv_obj_set_style_text_font(lv_times, &lv_font_clock_90, 0);
     lv_label_set_text_static(lv_times, ":");
     lv_obj_set_style_text_align(lv_times, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_color(lv_times, lv_color_make(0x00, 0xff, 0x00), 0);
+    lv_obj_set_style_text_color(lv_times, lv_color_make(0xff, 0xff, 0x00), 0);
     lv_obj_align(lv_times, LV_ALIGN_CENTER, 0, -40);
 
     ht->lv_times = lv_times;
@@ -77,20 +73,20 @@ lv_obj_t *screen_clock_create(clock_app_t *ht, lv_obj_t * parent) {
 
     ht->lv_date = lv_date;
 
-    lv_obj_t * lv_ble = lv_label_create(scr);
-    lv_obj_set_style_text_color(lv_ble, lv_color_make(0x00, 0x00, 0xff), 0);
+    lv_obj_t * lv_ble = lv_label_create(scr);    
     lv_obj_align(lv_ble, LV_ALIGN_TOP_LEFT, 0, 0);
     lv_obj_set_style_text_font(lv_ble, &lv_font_sys_20, 0);
+    lv_label_set_text(lv_ble, "\xEE\xA4\x83");
     if ( pinetimecos.bluetoothState == StatusOFF ) {
-        lv_label_set_text(lv_ble, "");
+        lv_obj_set_style_text_color(lv_ble, lv_color_hex(0x909090), 0);
     } else {
-        lv_label_set_text(lv_ble, "\xEE\xA4\x83");
+        lv_obj_set_style_text_color(lv_ble, lv_color_hex(0x0000ff), 0);
     }
 
     ht->lv_ble = lv_ble;
 
     lv_obj_t * lv_power = lv_label_create(scr);
-    lv_obj_set_style_text_color(lv_power, lv_color_make(0x00, 0xff, 0x00), 0);
+    lv_obj_set_style_text_color(lv_power, lv_color_hex(0xffffff), 0);
     lv_obj_align(lv_power, LV_ALIGN_TOP_RIGHT, 0, 0);
     lv_obj_set_style_text_font(lv_power, &lv_font_sys_20, 0);
     if ( pinetimecos.chargingState == StatusOFF ) {
@@ -160,9 +156,9 @@ int clock_update(app_t *app) {
         lv_label_set_text_fmt(ht->lv_date, "#00ff00 %s# %02i %s", get_days(time_tmp.week), time_tmp.day, get_months(time_tmp.month));
 
     if ( pinetimecos.bluetoothState == StatusOFF ) {
-        lv_label_set_text(ht->lv_ble, "");
+        lv_obj_set_style_text_color(ht->lv_ble, lv_color_hex(0x404040), 0);
     } else {
-        lv_label_set_text(ht->lv_ble, "\xEE\xA4\x83");
+        lv_obj_set_style_text_color(ht->lv_ble, lv_color_hex(0x0000ff), 0);
     }
 
     if ( pinetimecos.chargingState == StatusOFF ) {
@@ -171,10 +167,10 @@ int clock_update(app_t *app) {
         lv_label_set_text(ht->lv_power, "\xEE\xA4\x85 \xEE\xA4\x87");
     }
 
-    if ( pinetimecosBLE.weather.hasData )
+    if ( pinetimecosBLE.weather.newData ) {
         lv_label_set_text_fmt(ht->lv_demo, "%s - %s, %i°C ", pinetimecosBLE.weather.location, pinetimecosBLE.weather.currentCondition, pinetimecosBLE.weather.currentTemp);
-    else 
-        lv_label_set_text(ht->lv_demo, "");
+        pinetimecosBLE.weather.newData = false;
+    }
 
     ht->time_old = time_tmp;
 

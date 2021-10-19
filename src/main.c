@@ -44,7 +44,7 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t* p_file_name) {
 
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name) {
     //NRF_LOG_ERROR("%s:%d", p_file_name, line_num);
-    pinetimecos.debug = error_code;
+    //pinetimecos.debug = error_code;
     on_error(2);
 }
 
@@ -57,7 +57,7 @@ void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info) {
 
 void app_error_handler_bare(uint32_t error_code) {
     //NRF_LOG_ERROR("Received an error: 0x%08x!", error_code);
-    pinetimecos.debug = error_code;
+    //pinetimecos.debug = error_code;
     on_error(4);
 }
 
@@ -74,7 +74,7 @@ static void log_init(void) {
     ret_code_t err_code = NRF_LOG_INIT(NULL);
     APP_ERROR_CHECK(err_code);
 
-    NRF_LOG_DEFAULT_BACKENDS_INIT();
+    //NRF_LOG_DEFAULT_BACKENDS_INIT();
 }
 
 
@@ -82,7 +82,7 @@ static void log_init(void) {
 
 int main(void)
 {
-    log_init();
+    //log_init();
     clock_init();
 
     sys_init();

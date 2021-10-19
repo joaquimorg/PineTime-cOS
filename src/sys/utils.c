@@ -26,9 +26,9 @@ void display_off(void) {
 }
 
 void display_on(void) {
+    xTimerStart(idleTimer, 0);
     pinetimecos.state = Running;
     //xTaskResumeFromISR(pinetimecos.lvglTask);
-    xTimerStart(idleTimer, 0);
     st7789_wake_up();
     set_backlight_level(pinetimecos.backlightValue);
 }
