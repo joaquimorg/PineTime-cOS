@@ -14,6 +14,7 @@
 #include "task.h"
 #include "pinetime_board.h"
 #include "sys.h"
+#include "backlight.h"
 
 // ---------------------------------------------------------------------------------------------------------
 
@@ -25,15 +26,20 @@ static void on_error( uint8_t err ) {
     
     for (;;)
     {
-        /*for (uint8_t i = 0; i < err; i++)
-        {
-            nrf_delay_ms(200);
-            nrf_gpio_pin_clear(LCD_LIGHT_1);
-            nrf_delay_ms(200);
-            nrf_gpio_pin_set(LCD_LIGHT_1);
-        }*/
-        
-        nrf_delay_ms(1000);
+        // show error blinking backlight n times
+        // after 10 times, reset
+        for (uint8_t ii = 0; ii < 10; ii++) {
+            for (uint8_t i = 0; i < err; i++)
+            {
+                nrf_delay_ms(200);
+                set_backlight_level(0);
+                nrf_delay_ms(200);
+                set_backlight_level(3);
+            }
+            
+            nrf_delay_ms(1000);
+        }
+        NVIC_SystemReset();
     }
 }
 
@@ -56,9 +62,11 @@ void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info) {
 
 
 void app_error_handler_bare(uint32_t error_code) {
+    // Local APP_ERROR_CHECK
+
     //NRF_LOG_ERROR("Received an error: 0x%08x!", error_code);
-    //pinetimecos.debug = error_code;
-    on_error(4);
+    pinetimecos.debug = error_code;
+    //on_error(4);
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -80,8 +88,12 @@ static void log_init(void) {
 
 // ---------------------------------------------------------------------------------------------------------
 
-int main(void)
-{
+int main(void) {
+
+    // WDT problems on init from bootloader
+    NRF_WDT->RR[0] = WDT_RR_RR_Reload;
+    NRF_WDT->TASKS_START = 0;
+
     //log_init();
     clock_init();
 

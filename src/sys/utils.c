@@ -18,21 +18,27 @@
 
 
 void display_off(void) {
+    pinetimecos.state = Sleep;
     xTimerStop(idleTimer, 0);
     set_backlight_level(0);
     st7789_sleep();
-    pinetimecos.state = Sleep;
-    //vTaskSuspend(pinetimecos.lvglTask);
 }
 
 void display_on(void) {
     xTimerStart(idleTimer, 0);
-    pinetimecos.state = Running;
-    //xTaskResumeFromISR(pinetimecos.lvglTask);
     st7789_wake_up();
+    pinetimecos.state = Running;
     set_backlight_level(pinetimecos.backlightValue);
 }
 
+
+void _wdt_kick() {
+
+    if (nrf_gpio_pin_read(KEY_ACTION)) {
+        return;
+    }
+    feed_watchdog();
+}
 
 // -----------------------------------------------------------------------------------------
 

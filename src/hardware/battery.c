@@ -108,3 +108,12 @@ void battery_read(void) {
     APP_ERROR_CHECK(err_code);
 
 }
+
+char * battery_get_icon(void) {
+    if (pinetimecos.batteryPercentRemaining == -1) return "\xEE\xA4\x87";
+    if (pinetimecos.batteryPercentRemaining > 80) return "\xEE\xA4\xA0";
+    if (pinetimecos.batteryPercentRemaining > 60) return "\xEE\xA4\xA1";
+    if (pinetimecos.batteryPercentRemaining > 40) return "\xEE\xA4\xA2";
+    if (pinetimecos.batteryPercentRemaining > 20) return "\xEE\xA4\xA3";
+    return "\xEE\xA4\xA4";
+}

@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include "clock.h"
 #include "rtc.h"
+#include "battery.h"
 #include "app.h"
 #include "sys.h"
 #include "utils.h"
@@ -18,8 +19,34 @@ static inline clock_app_t *_from_app(app_t *app) {
     return container_of(app, clock_app_t, app);
 }
 
+static void anim_y_cb(void * var, int32_t v)
+{
+    lv_obj_set_y(var, v);
+}
 
-lv_obj_t *screen_clock_create(clock_app_t *ht, lv_obj_t * parent) {
+
+static void anim_label(lv_obj_t *obj, bool show) {
+
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, obj);
+
+    if(show) {
+        lv_anim_set_values(&a, 20, -25);
+        lv_anim_set_time(&a, 500);
+        lv_anim_set_path_cb(&a, lv_anim_path_overshoot);
+    } else {
+        lv_anim_set_values(&a, -25, 20);
+        lv_anim_set_time(&a, 500);
+        lv_anim_set_path_cb(&a, lv_anim_path_ease_in);
+    }
+    lv_anim_set_exec_cb(&a, anim_y_cb);
+    lv_anim_set_ready_cb(&a, NULL);
+    lv_anim_start(&a);
+
+}
+
+static lv_obj_t *screen_clock_create(clock_app_t *ht, lv_obj_t * parent) {
     UTCTimeStruct time_tmp;
 
     lv_obj_t *scr = lv_obj_create(parent);
@@ -90,49 +117,50 @@ lv_obj_t *screen_clock_create(clock_app_t *ht, lv_obj_t * parent) {
     lv_obj_align(lv_power, LV_ALIGN_TOP_RIGHT, 0, 0);
     lv_obj_set_style_text_font(lv_power, &lv_font_sys_20, 0);
     if ( pinetimecos.chargingState == StatusOFF ) {
-        lv_label_set_text(lv_power, "\xEE\xA4\x87");
+        lv_label_set_text_fmt(lv_power, "%s", battery_get_icon());
     } else {
-        lv_label_set_text(lv_power, "\xEE\xA4\x85 \xEE\xA4\x87");
+        lv_label_set_text(lv_power, "\xEE\xA4\x85 \xEE\xA4\xA0");
     }
 
     ht->lv_power = lv_power;
 
 
-    /*lv_obj_t * lv_time_sec = lv_label_create(scr);
-    lv_label_set_long_mode(lv_time_sec, LV_LABEL_LONG_SCROLL_CIRCULAR);     
-    lv_label_set_text(lv_time_sec, "It is a circularly scrolling text. is big....");
-    lv_obj_set_width(lv_time_sec, 220);
-    //lv_obj_set_style_text_align(lv_time_sec, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_color(lv_time_sec, lv_color_make(0xaf, 0xaf, 0xaf), 0);
-    lv_obj_align(lv_time_sec, LV_ALIGN_CENTER, 0, 75);
-
-    ht->lv_time_sec = lv_time_sec;*/
-
     ht->time_old = time_tmp;
 
 
     lv_obj_t * lv_debug = lv_label_create(scr);
-    lv_obj_set_style_text_color(lv_debug, lv_color_make(0xff, 0xf, 0xff), 0);
-    lv_obj_align(lv_debug, LV_ALIGN_BOTTOM_LEFT, 0, -25);
-    lv_obj_set_width(lv_debug, 240);
-    lv_label_set_long_mode(lv_debug, LV_LABEL_LONG_SCROLL_CIRCULAR);
-    if ( pinetimecosBLE.weather.hasData )
-        lv_label_set_text_fmt(lv_debug, "%s - %s, %i°C ", pinetimecosBLE.weather.location, pinetimecosBLE.weather.currentCondition, pinetimecosBLE.weather.currentTemp);
-    else 
-        lv_label_set_text(lv_debug, "");
-
     ht->lv_demo = lv_debug;
+    lv_obj_set_style_text_color(ht->lv_demo, lv_color_make(0xff, 0xf, 0xff), 0);
+    lv_obj_set_width(ht->lv_demo, 240);
+    lv_label_set_long_mode(ht->lv_demo, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    lv_label_set_recolor(ht->lv_demo, true);
+    if ( pinetimecosBLE.weather.hasData ) {
+        lv_obj_align(ht->lv_demo, LV_ALIGN_BOTTOM_LEFT, 0, -25);
+        lv_label_set_text_fmt(ht->lv_demo, "%s - %s, %i°C - For today #ff0000 %i°C# #0000ff %i°C#", 
+            pinetimecosBLE.weather.location, 
+            pinetimecosBLE.weather.currentCondition, 
+            pinetimecosBLE.weather.currentTemp,
+            pinetimecosBLE.weather.todayMaxTemp,
+            pinetimecosBLE.weather.todayMinTemp
+            );
+    } else {
+        lv_obj_align(ht->lv_demo, LV_ALIGN_BOTTOM_LEFT, 0, 0);
+        lv_label_set_text_fmt(ht->lv_demo, "%s", pinetimecos.resetReason);
+    }
+
+    
 
     return scr;
 }
 
-int clock_init(app_t *app, lv_obj_t * parent) {
+static int init(app_t *app, lv_obj_t * parent) {
     clock_app_t *htapp = _from_app(app);
     htapp->screen = screen_clock_create(htapp, parent);
     return 0;
 }
 
-int clock_update(app_t *app) {
+
+static int update(app_t *app) {
     UTCTimeStruct time_tmp;
 
     clock_app_t *ht = _from_app(app);
@@ -162,14 +190,23 @@ int clock_update(app_t *app) {
     }
 
     if ( pinetimecos.chargingState == StatusOFF ) {
-        lv_label_set_text(ht->lv_power, "\xEE\xA4\x87");
+        lv_label_set_text_fmt(ht->lv_power, "%s", battery_get_icon());
     } else {
-        lv_label_set_text(ht->lv_power, "\xEE\xA4\x85 \xEE\xA4\x87");
+        lv_label_set_text(ht->lv_power, "\xEE\xA4\x85 \xEE\xA4\xA0");
     }
 
+    //lv_label_set_text_fmt(ht->lv_demo, "%i", pinetimecos.debug);
     if ( pinetimecosBLE.weather.newData ) {
-        lv_label_set_text_fmt(ht->lv_demo, "%s - %s, %i°C ", pinetimecosBLE.weather.location, pinetimecosBLE.weather.currentCondition, pinetimecosBLE.weather.currentTemp);
+        anim_label(ht->lv_demo, false);
+        lv_label_set_text_fmt(ht->lv_demo, "%s - %s, %i°C - For today #ff0000 %i°C# #0000ff %i°C#", 
+            pinetimecosBLE.weather.location, 
+            pinetimecosBLE.weather.currentCondition, 
+            pinetimecosBLE.weather.currentTemp,
+            pinetimecosBLE.weather.todayMaxTemp,
+            pinetimecosBLE.weather.todayMinTemp
+            );
         pinetimecosBLE.weather.newData = false;
+        anim_label(ht->lv_demo, true);
     }
 
     ht->time_old = time_tmp;
@@ -177,7 +214,26 @@ int clock_update(app_t *app) {
     return 0;
 }
 
-int clock_close(app_t *app) {
+static int gesture(app_t *app, enum appGestures gesture) {
+
+    switch (gesture) {
+        case DirBottom:
+            load_application(Info, AnimDown);
+            break;
+        case DirTop:
+            load_application(Notification, AnimUp);
+            break;
+        case DirRight:
+            load_application(Menu, AnimRight);
+            break;
+        default:
+            break;
+    }
+    return 0;
+}
+
+
+static int close(app_t *app) {
     clock_app_t *ht = _from_app(app);
     lv_obj_clean(ht->screen);
     lv_obj_del(ht->screen);
@@ -188,7 +244,8 @@ int clock_close(app_t *app) {
 static const app_spec_t clock_spec = {
     .name = "clock",
     .updateInterval = 250,
-    .init = clock_init,
-    .update = clock_update,
-    .close = clock_close,
+    .init = init,
+    .update = update,
+    .gesture = gesture,
+    .close = close,
 };

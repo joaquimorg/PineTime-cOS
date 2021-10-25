@@ -10,6 +10,7 @@ typedef struct _info_app {
     app_t app;
     lv_obj_t *screen;
     lv_obj_t *lv_demo;
+    lv_obj_t *lv_table;
 } info_app_t;
 
 

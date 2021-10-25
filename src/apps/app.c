@@ -1,6 +1,7 @@
 #include "nordic_common.h"
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
+#include "nrf_drv_gpiote.h"
 
 /* FreeRTOS related */
 #include "FreeRTOS.h"
@@ -13,57 +14,23 @@
 #include "lvgl.h"
 #include "rtc.h"
 #include "cst816.h"
+#include "motor.h"
 #include "watchdog.h"
 #include "pinetime_board.h"
 
 #include "clock.h"
 #include "info.h"
 #include "menu.h"
+#include "notification.h"
 
 
-#define APP_TASK_DELAY          pdMS_TO_TICKS( 5 )
 #define APP_TASK_DELAY_SLEEP    pdMS_TO_TICKS( 500 )
 
 static lv_obj_t *main_scr;
 static lv_timer_t * app_timer;
 
 void app_push_message(enum appMessages msg);
-static void load_application(enum apps app, enum RefreshDirections dir);
-
-static void _wdt_kick() {    
-
-    if (nrf_gpio_pin_read(KEY_ACTION)) {
-        return;
-    }    
-    feed_watchdog();
-}
-
-static void gesture_event_cb(lv_event_t * e) {    
-
-    switch (tsData.gesture) {
-        case TOUCH_SLIDE_LEFT:
-            pinetimecosapp.gestureDir = DirLeft;
-            break;
-        case TOUCH_SLIDE_RIGHT:
-            pinetimecosapp.gestureDir = DirRight;
-            break;
-        case TOUCH_SLIDE_UP:
-            pinetimecosapp.gestureDir = DirTop;
-            break;
-        case TOUCH_SLIDE_DOWN:
-            pinetimecosapp.gestureDir = DirBottom;
-            break;
-        default:
-            pinetimecosapp.gestureDir = DirNone;
-            break;
-    }
-    tsData.gesture = TOUCH_NO_GESTURE;
-   
-    if ( pinetimecosapp.gestureDir != DirNone ) {
-        app_push_message(Gesture);
-    }
-    
-}
+void load_application(enum apps app, enum RefreshDirections dir);
 
 int app_init(app_t *app, lv_obj_t * parent) {
     return app->spec->init(app, parent);
@@ -71,6 +38,10 @@ int app_init(app_t *app, lv_obj_t * parent) {
 
 int app_update(app_t *app) {
     return app->spec->update(app);
+}
+
+int app_gesture(app_t *app, enum appGestures gesture) {
+    return app->spec->gesture(app, gesture);
 }
 
 int app_close(app_t *app) {
@@ -105,7 +76,7 @@ static void run_app(app_t *app) {
     lv_timer_set_period(app_timer, pinetimecosapp.runningApp->spec->updateInterval);
 
     pinetimecos.lvglstate = Running;
-    lv_timer_resume(app_timer);    
+    lv_timer_resume(app_timer);
 }
 
 static void update_time(lv_timer_t * timer) {
@@ -115,9 +86,11 @@ static void update_time(lv_timer_t * timer) {
 }
 
 void main_app(void* pvParameter) {
-    UNUSED_PARAMETER(pvParameter); 
+    UNUSED_PARAMETER(pvParameter);
 
     enum appMessages msg;
+    TickType_t queueTimeout = 1;
+
     appMsgQueue = xQueueCreate(QUEUESIZE, ITEMSIZE);
     pinetimecosapp.runningApp = NULL;
 
@@ -125,20 +98,24 @@ void main_app(void* pvParameter) {
 
     load_application(Clock, AnimUp);
 
-    lv_obj_add_event_cb(main_scr, gesture_event_cb, LV_EVENT_PRESSING, NULL);    
+    app_timer = lv_timer_create(update_time, 1000, NULL);
 
-    app_timer = lv_timer_create(update_time, 1000, NULL);    
+    xTaskNotifyGive(xTaskGetCurrentTaskHandle());
 
-    //xTaskNotifyGive(xTaskGetCurrentTaskHandle());
-    init_watchdog();
-    
+    xTimerStart(idleTimer, 0);
+
+    nrf_drv_gpiote_in_event_enable(KEY_ACTION, true);
+    nrf_drv_gpiote_in_event_enable(TP_IRQ, true);
+
+    //motor_start(10);
+
     pinetimecos.lvglstate = Running;
     pinetimecos.state = Running;
     while (true) {
-   
-        if (xQueueReceive(appMsgQueue, &msg, ( TickType_t ) APP_TASK_DELAY)) {
-            switch (msg)
-            {
+
+        if (xQueueReceive(appMsgQueue, &msg, queueTimeout) == pdPASS) {
+            switch (msg) {
+
                 case Timeout:
                     if(pinetimecos.state == Running) {
                         display_off();
@@ -146,14 +123,11 @@ void main_app(void* pvParameter) {
                     break;
 
                 case ButtonPushed:
-                    if(pinetimecos.state == Running) {
-                        if (pinetimecosapp.activeApp == Clock) {
-                            display_off();
-                        } else {
-                            load_application(pinetimecosapp.returnApp, pinetimecosapp.returnAnimation);
-                        }
+                    if (pinetimecosapp.activeApp == Clock) {
+                        display_off();
                     } else {
-                        display_on();
+                        load_application(pinetimecosapp.returnApp, pinetimecosapp.returnAnimation);
+                        reload_idle_timer();
                     }
                     break;
 
@@ -165,82 +139,99 @@ void main_app(void* pvParameter) {
 
                 case Gesture:
 
-                    if ( pinetimecosapp.activeApp == Clock ) {
-                        switch (pinetimecosapp.gestureDir) {
-                            case DirBottom:
-                                load_application(Info, AnimDown);
-                                break;
-                            case DirRight:
-                                load_application(Menu, AnimRight);
-                                break;
-                            default:
-                                break;
+                    if ( pinetimecosapp.gestureDir != DirNone ) {
+
+                        if ( pinetimecosapp.gestureDir == pinetimecosapp.returnDir ) {
+                            load_application(pinetimecosapp.returnApp, pinetimecosapp.returnAnimation);
+                        } else {
+                            // send gesture to app
+                            UNUSED_VARIABLE(app_gesture(pinetimecosapp.runningApp, pinetimecosapp.gestureDir));
                         }
-                    } else if ( pinetimecosapp.gestureDir == pinetimecosapp.returnDir ) {
-                        load_application(pinetimecosapp.returnApp, pinetimecosapp.returnAnimation);
+
+                        pinetimecosapp.gestureDir = DirNone;
                     }
-                    
-                    pinetimecosapp.gestureDir = DirNone;
                     break;
 
                 case UpdateBleConnection:
                     break;
-                    
+
+                case NewNotification:
+                    if(pinetimecos.state == Sleep) {
+                        display_on();
+                    }
+                    if ( pinetimecosapp.activeApp != Notification ) {
+                        motor_start(10);
+                        load_application(Notification, AnimUp);
+                        reload_idle_timer();
+                    }
+                    break;
+
                 default:
                     break;
             }
         }
-        if(pinetimecos.state != Running) {
-            vTaskDelay(APP_TASK_DELAY_SLEEP);
-        } else {
-            if (pinetimecos.lvglstate == Running) {
-                lv_timer_handler();
-                lv_tick_inc(20);
-            }
-        }
 
-        _wdt_kick();
+        if(pinetimecos.state == Sleep) {
+            //vTaskDelay(APP_TASK_DELAY_SLEEP);
+            //queueTimeout = portMAX_DELAY;
+            vTaskDelay(1);
+        } else {
+            lv_timer_handler();
+            lv_tick_inc(20);
+        }
+        //vTaskDelay(1);
         /* Tasks must be implemented to never return... */
+        _wdt_kick();
     }
 
-    vTaskDelete(NULL); 
+    vTaskDelete(NULL);
 
 }
 
+static void return_app(enum apps app, enum appGestures gesture, enum RefreshDirections dir) {
+    pinetimecosapp.returnApp = app;
+    pinetimecosapp.returnAnimation = dir;
+    pinetimecosapp.returnDir = gesture;
+}
 
-static void load_application(enum apps app, enum RefreshDirections dir) {
+void load_application(enum apps app, enum RefreshDirections dir) {
 
     set_refresh_direction(dir);
+    pinetimecosapp.activeApp = app;
     switch (app) {
 
         case Clock:
             run_app(APP_CLOCK);
-            pinetimecosapp.returnDir = DirNone;
+            return_app(Clock, DirNone, AnimNone);
             break;
 
         case Info:
             run_app(APP_INFO);
-            pinetimecosapp.returnApp = Clock;
-            pinetimecosapp.returnDir = DirTop;
-            pinetimecosapp.returnAnimation = AnimUp;
+            return_app(Clock, DirTop, AnimUp);
             break;
+
         case Menu:
             run_app(APP_MENU);
-            pinetimecosapp.returnApp = Clock;
-            pinetimecosapp.returnDir = DirLeft;
-            pinetimecosapp.returnAnimation = AnimLeft;
+            return_app(Clock, DirLeft, AnimLeft);
+            break;
+
+        case Notification:
+            run_app(APP_NOTIFICATION);
+            return_app(Clock, DirBottom, AnimDown);
             break;
 
         default:
             break;
     }
-    pinetimecosapp.activeApp = app;
 }
 
 
 void app_push_message(enum appMessages msg) {
     if( appMsgQueue == NULL ) return;
     if (in_isr()) {
+        if (xQueueIsQueueFullFromISR(appMsgQueue)) {
+            return;
+        }
         BaseType_t xHigherPriorityTaskWoken;
         xHigherPriorityTaskWoken = pdFALSE;
         xQueueSendFromISR(appMsgQueue, &msg, &xHigherPriorityTaskWoken);
@@ -249,6 +240,6 @@ void app_push_message(enum appMessages msg) {
             //portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
     } else {
-        xQueueSend(appMsgQueue, &msg, portMAX_DELAY);
+        xQueueSend(appMsgQueue, &msg, ( TickType_t ) 0);
     }
 }

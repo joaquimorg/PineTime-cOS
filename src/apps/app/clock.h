@@ -13,7 +13,6 @@ typedef struct _clock_app {
     lv_obj_t *lv_timeh;
     lv_obj_t *lv_timem;
     lv_obj_t *lv_times;
-    lv_obj_t *lv_time_sec;
     lv_obj_t *lv_date;
     lv_obj_t *lv_ble;
     lv_obj_t *lv_power;

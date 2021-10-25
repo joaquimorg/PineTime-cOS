@@ -63,6 +63,10 @@ int menu_update(app_t *app) {
     return 0;
 }
 
+static int gesture(app_t *app, enum appGestures gesture) {
+    return 0;
+}
+
 int menu_close(app_t *app) {
     menu_app_t *ht = _from_app(app);
     lv_obj_clean(ht->screen);
@@ -76,5 +80,6 @@ static const app_spec_t menu_spec = {
     .updateInterval = 1000,
     .init = menu_init,
     .update = menu_update,
+    .gesture = gesture,
     .close = menu_close,
 };

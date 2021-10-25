@@ -5,6 +5,7 @@
         "xiosbase": "c",
         "system_error": "c",
         "xlocmon": "c",
-        "xtr1common": "c"
+        "xtr1common": "c",
+        "info.h": "c"
     }
 }

@@ -26,6 +26,8 @@ enum Status {
 /* Main struct to for global state */
 struct pinetimecOS {
 
+     const char* resetReason;
+
      uint8_t backlightValue;
      uint16_t batteryVoltage;
      int batteryPercentRemaining;
@@ -36,14 +38,24 @@ struct pinetimecOS {
      enum State lvglstate;
      enum Status bluetoothState;
 
+     TimerHandle_t motor_timer;
+     enum Status motorState;
+
      uint16_t displayTimeout;
      uint16_t debug;
+
+     uint8_t xpos;
+     uint8_t ypos;
+     bool    click;
 };
 
 struct pinetimecOS pinetimecos;
 
 TimerHandle_t idleTimer;
 TimerHandle_t bleTimer;
+TimerHandle_t lvglTimer;
+
+TaskHandle_t lvglHandle;
 
 void reload_idle_timer(void);
 

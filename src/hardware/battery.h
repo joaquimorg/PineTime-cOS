@@ -7,6 +7,7 @@
 
 void battery_init(void);
 void battery_read(void);
+char * battery_get_icon(void);
 
 
 #endif //BATTERY_CONFIG_H

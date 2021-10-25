@@ -4,15 +4,12 @@
 
 #include "ble_cmd.h"
 #include "sys.h"
-#include "FreeRTOS.h"
-#include "task.h"
-#include "nrf_gpio.h"
-#include "nrf_drv_gpiote.h"
-#include "pinetime_board.h"
 #include "nrf_ble.h"
 #include "app.h"
-#include "watchdog.h"
 #include "rtc.h"
+#include "motor.h"
+
+static const char * notification_names_def[10] = {"Missed Call", "SMS", "Social", "e-Mail", "Calendar", "WhatsApp", "Messenger", "Instagram", "Twitter", "Skype"};
 
 static uint32_t get_int(uint8_t pos) {    
     return inputBuffer[pos + 3] + (inputBuffer[pos + 2] << 8) + (inputBuffer[pos + 1] << 16) + (inputBuffer[pos] << 24);
@@ -78,26 +75,47 @@ int packByte(void *buf, uint8_t x) {
 static void get_notification(void) {
     uint8_t size;
     uint16_t i = 0;
-    pinetimecosBLE.notification.id = get_int(i);
+
+    notification_t notification;
+
+    notification.id = get_int(i);
     i += 4;
-    
-    if ( pinetimecosBLE.notification.subject != NULL ) {
-        free(pinetimecosBLE.notification.subject);
-    }
+
     size = get_byte( i++ );
-    pinetimecosBLE.notification.subject = (char *)malloc(size);
-    memcpy(pinetimecosBLE.notification.subject, (char *) &inputBuffer[i], size);
+    notification.subject = (char *)malloc(size);
+    memcpy(notification.subject, (char *) &inputBuffer[i], size);
     i += size;
 
-    if (  pinetimecosBLE.notification.body != NULL ) {
-        free( pinetimecosBLE.notification.body);
-    }
     size = get_byte( i++ );
-    pinetimecosBLE.notification.body = (char *)malloc(size);
-    memcpy(pinetimecosBLE.notification.body, (char *) &inputBuffer[i], size);
+    notification.body = (char *)malloc(size);
+    memcpy(notification.body, (char *) &inputBuffer[i], size);
     i += size;
     
-    pinetimecosBLE.notification.type = get_byte(i);
+    notification.type = get_byte(i);
+    notification.typeName = notification_names_def[notification.type];
+
+    if ( pinetimecosBLE.notificationCount <= 4 ) {
+        pinetimecosBLE.notification[pinetimecosBLE.notificationCount++] = notification;
+    } else {        
+        
+        // free mem from oldest notification
+        if ( pinetimecosBLE.notification[0].subject != NULL ) {
+            free(pinetimecosBLE.notification[0].subject);
+        }
+        if (  pinetimecosBLE.notification[0].body != NULL ) {
+            free( pinetimecosBLE.notification[0].body);
+        }
+
+        // delete oldest notification
+        // move all notifications up
+        for (uint8_t i = 0; i < pinetimecosBLE.notificationCount - 1; i++) {
+            pinetimecosBLE.notification[i] = pinetimecosBLE.notification[i + 1];
+        }
+
+        pinetimecosBLE.notification[pinetimecosBLE.notificationCount - 1] = notification;
+    }
+
+    pinetimecosBLE.newNotification = true;
     
 }
 
@@ -131,7 +149,7 @@ static void get_weather(void) {
 
 void ble_command(uint8_t msg_type) {
 
-    pinetimecos.debug = msg_type;
+    //pinetimecos.debug = msg_type;
     switch (msg_type) {
         case COMMAND_TIME_UPDATE:
             rtc_set_time(get_int(0));
@@ -139,6 +157,7 @@ void ble_command(uint8_t msg_type) {
 
         case COMMAND_NOTIFICATION:
             get_notification();
+            app_push_message(NewNotification);
             break;
 
         case COMMAND_DELETE_NOTIFICATION:
@@ -148,6 +167,7 @@ void ble_command(uint8_t msg_type) {
             break;
 
         case COMMAND_SET_CALL:
+            motor_start(10);
             break;
 
         case COMMAND_SET_MUSIC:
@@ -161,9 +181,11 @@ void ble_command(uint8_t msg_type) {
 
         case COMMAND_FIND_DEVICE:
             pinetimecosBLE.find_device = inputBuffer[0];
+            motor_start(10);
             break;
 
         case COMMAND_VIBRATION:
+            motor_start(10);
             break;
 
         case COMMAND_WEATHER:
@@ -187,9 +209,16 @@ void ble_send_version(void) {
 
 void ble_send_battery(void) {
 
-    uint8_t data[10] = {};
+    uint8_t data[11] = {};
+    uint8_t status = 0;
 
-    if ( pinetimecos.batteryPercentRemaining == -1 ) return;
+    if ( pinetimecos.batteryPercentRemaining == -1 ) {
+        status = 0x01;
+    } else if ( pinetimecos.chargingState == StatusON ) {
+        status = 0x02;
+    } else {
+        status = 0x03;
+    }
 
     uint8_t i = 0;
     data[i++] = 0x00;
@@ -197,6 +226,7 @@ void ble_send_battery(void) {
 
     i += packInt(&data[i], pinetimecos.batteryPercentRemaining);
     i += packFloat(&data[i], (float)pinetimecos.batteryVoltage / 1000);
+    i += packByte(&data[i], status);
 
 
     send_data_ble(data, i);

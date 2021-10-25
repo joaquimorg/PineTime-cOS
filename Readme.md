@@ -46,6 +46,9 @@ $ make -j
 Docs
 ========================================
 
+Web Bluetooth Secure DFU : https://thegecko.github.io/web-bluetooth-dfu/examples/web.html
+
+
 Nordic's Secure DFU bootloader, a step by step guide
 
 https://devzone.nordicsemi.com/nordic/short-range-guides/b/software-development-kit/posts/getting-started-with-nordics-secure-dfu-bootloader

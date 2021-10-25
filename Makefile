@@ -47,6 +47,7 @@ SRC_FILES += \
   $(PROJ_DIR)/hardware/st7789.c \
   $(PROJ_DIR)/hardware/cst816.c \
   $(PROJ_DIR)/hardware/flash.c \
+  $(PROJ_DIR)/hardware/motor.c \
   $(PROJ_DIR)/theme/lv_theme_pinetime.c \
   $(PROJ_DIR)/theme/lv_font_roboto_24.c \
   $(PROJ_DIR)/theme/lv_font_sys_20.c \
@@ -62,6 +63,7 @@ SRC_FILES += \
   $(PROJ_DIR)/apps/app/clock.c \
   $(PROJ_DIR)/apps/app/info.c \
   $(PROJ_DIR)/apps/app/menu.c \
+  $(PROJ_DIR)/apps/app/notification.c \
 
 # Resources
 SRC_FILES += \
@@ -151,10 +153,10 @@ LDFLAGS += --specs=nano.specs
 LDFLAGS += -fstack-usage
 LDFLAGS += -Wl,--print-memory-usage
 
-pinetime-cos: CFLAGS += -D__HEAP_SIZE=0x1500
-pinetime-cos: CFLAGS += -D__STACK_SIZE=0x1500
-pinetime-cos: ASMFLAGS += -D__HEAP_SIZE=0x1500
-pinetime-cos: ASMFLAGS += -D__STACK_SIZE=0x1500
+pinetime-cos: CFLAGS += -D__HEAP_SIZE=0x1100
+pinetime-cos: CFLAGS += -D__STACK_SIZE=0x1100
+pinetime-cos: ASMFLAGS += -D__HEAP_SIZE=0x1100
+pinetime-cos: ASMFLAGS += -D__STACK_SIZE=0x1100
 
 # Add standard libraries at the very end of the linker input, after all objects
 # that may need symbols provided by these libraries.

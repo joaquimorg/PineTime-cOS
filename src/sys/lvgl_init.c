@@ -90,15 +90,15 @@ static void touchpad_read(lv_indev_drv_t* drv, lv_indev_data_t* data) {
 
     bool touched = (tsData.event == 2);
 
-    if (!touched) {
-        data->state = LV_INDEV_STATE_REL;
-    } else {
+    if (touched) {
         data->state = LV_INDEV_STATE_PR;
-
-        /*Set the coordinates*/
-        data->point.x = tsData.xpos;
-        data->point.y = tsData.ypos;
+    } else {
+        data->state = LV_INDEV_STATE_REL;
     }
+
+    /*Set the coordinates*/
+    data->point.x = tsData.last_xpos;
+    data->point.y = tsData.last_ypos;
 
 }
 

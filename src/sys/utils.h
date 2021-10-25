@@ -16,6 +16,8 @@ static inline bool in_isr(void) {
 void display_on(void);
 void display_off(void);
 
+void _wdt_kick();
+
 const char* actual_reset_reason(void);
 
 #endif //UTILS_H
