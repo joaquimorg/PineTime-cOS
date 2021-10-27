@@ -19,12 +19,12 @@
 #include "pinetime_board.h"
 
 #include "clock.h"
-#include "info.h"
+#include "debug.h"
 #include "menu.h"
 #include "notification.h"
 
 
-#define APP_TASK_DELAY_SLEEP    pdMS_TO_TICKS( 500 )
+#define APP_TASK_DELAY_SLEEP    pdMS_TO_TICKS( 1000 )
 
 static lv_obj_t *main_scr;
 static lv_timer_t * app_timer;
@@ -172,15 +172,14 @@ void main_app(void* pvParameter) {
         }
 
         if(pinetimecos.state == Sleep) {
-            //vTaskDelay(APP_TASK_DELAY_SLEEP);
+            vTaskDelay(APP_TASK_DELAY_SLEEP);
             //queueTimeout = portMAX_DELAY;
-            vTaskDelay(1);
+            //vTaskDelay(1);
         } else {
+            //queueTimeout = 1;
             lv_timer_handler();
             lv_tick_inc(20);
         }
-        //vTaskDelay(1);
-        /* Tasks must be implemented to never return... */
         _wdt_kick();
     }
 
@@ -200,19 +199,19 @@ void load_application(enum apps app, enum RefreshDirections dir) {
     pinetimecosapp.activeApp = app;
     switch (app) {
 
+        case Debug:
+            run_app(APP_DEBUG);
+            return_app(Menu, DirTop, AnimUp);
+            break;
+
         case Clock:
             run_app(APP_CLOCK);
             return_app(Clock, DirNone, AnimNone);
             break;
 
-        case Info:
-            run_app(APP_INFO);
-            return_app(Clock, DirTop, AnimUp);
-            break;
-
         case Menu:
             run_app(APP_MENU);
-            return_app(Clock, DirLeft, AnimLeft);
+            return_app(Clock, DirTop, AnimUp);
             break;
 
         case Notification:

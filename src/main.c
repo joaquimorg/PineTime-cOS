@@ -85,6 +85,24 @@ static void log_init(void) {
     //NRF_LOG_DEFAULT_BACKENDS_INIT();
 }
 
+static void i2c_clean_up(void) {
+    // Unblock i2c?
+    nrf_gpio_cfg(TWI_SCL,
+                NRF_GPIO_PIN_DIR_OUTPUT,
+                NRF_GPIO_PIN_INPUT_DISCONNECT,
+                NRF_GPIO_PIN_NOPULL,
+                NRF_GPIO_PIN_S0D1,
+                NRF_GPIO_PIN_NOSENSE);
+
+    nrf_gpio_pin_set(TWI_SCL);
+
+    for (uint8_t i = 0; i < 16; i++) {
+        nrf_gpio_pin_toggle(TWI_SCL);
+        nrf_delay_us(5);
+    }
+
+    nrf_gpio_cfg_default(TWI_SCL);
+}
 
 // ---------------------------------------------------------------------------------------------------------
 
@@ -92,13 +110,18 @@ int main(void) {
 
     // WDT problems on init from bootloader
     NRF_WDT->RR[0] = WDT_RR_RR_Reload;
-    NRF_WDT->TASKS_START = 0;
+    NRF_WDT->TASKS_START = 0;    
+
+    i2c_clean_up();
 
     //log_init();
     clock_init();
 
     sys_init();
 
+    // Activate deep sleep mode.
+    SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
+    
     // Start FreeRTOS scheduler.
     vTaskStartScheduler();
 

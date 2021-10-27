@@ -20,7 +20,7 @@
 void display_off(void) {
     pinetimecos.state = Sleep;
     xTimerStop(idleTimer, 0);
-    set_backlight_level(0);
+    set_backlight_level(0);    
     st7789_sleep();
 }
 
@@ -28,7 +28,7 @@ void display_on(void) {
     xTimerStart(idleTimer, 0);
     st7789_wake_up();
     pinetimecos.state = Running;
-    set_backlight_level(pinetimecos.backlightValue);
+    set_backlight_level(pinetimecos.backlightLevel);
 }
 
 

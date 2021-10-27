@@ -9,6 +9,7 @@
 
 void backlight_init(void);
 void set_backlight_level(uint8_t level);
+char * get_backlight_icon(uint8_t level);
 
 
 #endif //BACKLIGHT_CONFIG_H

@@ -154,7 +154,6 @@ void get_UTC_time(UTCTimeStruct *tm)
 const char *get_months_low( uint8_t month ) {
 
     char const *MonthsLow[] = {
-        "",
         "January",
         "February",
         "March",
@@ -175,7 +174,6 @@ const char *get_months_low( uint8_t month ) {
 
 const char *get_days_low( uint8_t day ) {
     char const *DaysStringLow[] = {
-        "",
         "Monday",
         "Tuesday",
         "Wednesday",
@@ -187,9 +185,21 @@ const char *get_days_low( uint8_t day ) {
     return DaysStringLow[day];
 }
 
+const char *get_days_low_short( uint8_t day ) {
+    char const *DaysStringLow[] = {
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat",
+        "Sun"
+    };
+    return DaysStringLow[day];
+}
+
 const char *get_months( uint8_t month ) {
     char const *MonthsString[] = {
-        "",
         "JAN",
         "FEB",
         "MAR",

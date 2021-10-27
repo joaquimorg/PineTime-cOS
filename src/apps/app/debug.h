@@ -1,20 +1,20 @@
-#ifndef INFO_H
-#define INFO_H
+#ifndef DEBUG_H
+#define DEBUG_H
 
 #include <stdbool.h>
 #include <stdint.h>
 #include "app.h"
 #include "lvgl.h"
 
-typedef struct _info_app {
+typedef struct _debug_app {
     app_t app;
     lv_obj_t *screen;
     lv_obj_t *lv_demo;
     lv_obj_t *lv_table;
-} info_app_t;
+} debug_app_t;
 
 
-extern info_app_t info_app;
-#define APP_INFO (&info_app.app)
+extern debug_app_t debug_app;
+#define APP_DEBUG (&debug_app.app)
 
-#endif /* INFO_H */
+#endif /* DEBUG_H */

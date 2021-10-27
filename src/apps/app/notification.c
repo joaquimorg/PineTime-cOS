@@ -29,11 +29,73 @@ static void screen_create(notification_app_t *ht, lv_obj_t * parent) {
 
     ht->screen = scr;
 
-    /*LV_IMG_DECLARE(msg);
-    lv_obj_t * lv_img = lv_img_create(ht->screen);
-    lv_img_set_src(lv_img, &msg);
-    lv_obj_align(lv_img, LV_ALIGN_CENTER, 0, 0);*/
+    /*static lv_point_t line_points[] = { {5, 236}, {234, 236} };
+
+    lv_obj_t * line1;
+    line1 = lv_line_create(ht->screen);
+    lv_line_set_points(line1, line_points, 2);
+    lv_obj_set_style_line_width(line1, 4, 0);
+    lv_obj_set_style_line_color(line1, lv_color_hex(0x555555), 0);
+    lv_obj_set_style_line_rounded(line1, true, 0);
     
+    lv_obj_center(line1);*/
+    
+}
+
+static void anim_x_cb(void * var, int32_t v) {
+    lv_obj_set_x(var, v);
+}
+
+static int show_not(app_t *app);
+
+static void anim_label_n(lv_obj_t *obj, bool reverse) {
+
+    lv_anim_t a;    
+    lv_anim_init(&a);
+
+    lv_anim_set_var(&a, obj);
+    if (reverse) {
+        lv_anim_set_values(&a, 240, 0);
+        lv_anim_set_path_cb(&a, lv_anim_path_ease_in);
+    } else {
+        lv_anim_set_values(&a, -240, 0);
+        lv_anim_set_path_cb(&a, lv_anim_path_ease_out);
+    }
+    lv_anim_set_time(&a, 250);
+    lv_anim_set_exec_cb(&a, anim_x_cb);
+    lv_anim_start(&a);
+}
+
+static void anim_end_cb(lv_anim_t * a) {
+    notification_app_t *ht = _from_app((app_t*)(a->user_data));    
+    show_not((app_t*)(a->user_data));
+    //lv_obj_set_x(ht->lv_not, 0);
+    //lv_obj_fade_in(ht->lv_not, 200, 0);
+    anim_label_n(ht->lv_not, ht->reverse);
+}
+
+static void anim_label(app_t *app, lv_obj_t *obj, bool cb, bool reverse) {
+
+    lv_anim_t a;    
+    lv_anim_init(&a);
+
+    a.user_data = app;
+    
+    lv_anim_set_var(&a, obj);
+    if (reverse) {
+        lv_anim_set_values(&a, 0, 240);
+        lv_anim_set_path_cb(&a, lv_anim_path_ease_out);
+    } else {
+        lv_anim_set_values(&a, 0, -240);
+        lv_anim_set_path_cb(&a, lv_anim_path_ease_in);
+    }
+    lv_anim_set_time(&a, 250);
+    lv_anim_set_exec_cb(&a, anim_x_cb);
+    if (cb) {
+        lv_anim_set_ready_cb(&a, anim_end_cb);
+    }
+    lv_anim_start(&a);
+    //lv_obj_fade_out(obj, 200, 0);
 }
 
 static void screen_notification_create(notification_app_t *ht) {
@@ -67,11 +129,12 @@ static void screen_notification_create(notification_app_t *ht) {
 }
 
 static void no_notification_create(notification_app_t *ht) {
-    lv_obj_t * lv_app = lv_label_create(ht->screen);    
-    lv_label_set_text(lv_app, "No new notifications");
-    lv_obj_set_style_text_color(lv_app, lv_color_hex(0xffff00), 0);
-    //lv_obj_align(lv_app, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_center(lv_app);
+    lv_obj_t * lv_app = lv_label_create(ht->screen);
+    ht->lv_app = lv_app;
+    lv_label_set_text_static(ht->lv_app, "No new\nnotifications");
+    lv_obj_set_style_text_color(ht->lv_app, lv_color_hex(0xffff00), 0);
+    lv_obj_align(ht->lv_app, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_center(ht->lv_app);
 }
 
 static int init(app_t *app, lv_obj_t * parent) {
@@ -94,6 +157,7 @@ static int show_not(app_t *app) {
     notification = pinetimecosBLE.notification[ht->current_not - 1];
     lv_label_set_text_fmt(ht->lv_count, "%i / %i", ht->current_not, pinetimecosBLE.notificationCount);
     lv_label_set_text(ht->lv_app, notification.typeName);
+        
     lv_label_set_text_fmt(ht->lv_not, "%s\n%s", notification.subject, notification.body);
 
     return 0;
@@ -106,7 +170,7 @@ static int update(app_t *app) {
     if ( pinetimecosBLE.newNotification ) {
         ht->current_not = pinetimecosBLE.notificationCount;
         pinetimecosBLE.newNotification = false;
-        show_not(app);    
+        show_not(app);
     }
 
     return 0;
@@ -124,13 +188,18 @@ static int gesture(app_t *app, enum appGestures gesture) {
         case DirRight:
             if (ht->current_not > 1) {
                 ht->current_not--;
-                show_not(app);
+                ht->reverse = false;
+                anim_label(app, ht->lv_not, true, true);
+                //show_not(app);
             }
             break;
         case DirLeft:
             if (ht->current_not < pinetimecosBLE.notificationCount) {
                 ht->current_not++;
-                show_not(app);
+                ht->reverse = true;
+                anim_label(app, ht->lv_not, true, false);
+                //show_not(app);
+                //anim_label(app, ht->lv_not, false);
             }
             break;
         default:

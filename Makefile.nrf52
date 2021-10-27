@@ -50,9 +50,6 @@ SRC_FILES += \
   $(SDK_ROOT)/external/freertos/source/event_groups.c \
   $(SDK_ROOT)/external/freertos/source/portable/MemMang/heap_1.c \
   $(SDK_ROOT)/external/freertos/source/list.c \
-  $(SDK_ROOT)/external/freertos/portable/GCC/nrf52/port.c \
-  $(SDK_ROOT)/external/freertos/portable/CMSIS/nrf52/port_cmsis.c \
-  $(SDK_ROOT)/external/freertos/portable/CMSIS/nrf52/port_cmsis_systick.c \
   $(SDK_ROOT)/external/freertos/source/queue.c \
   $(SDK_ROOT)/external/freertos/source/stream_buffer.c \
   $(SDK_ROOT)/external/freertos/source/tasks.c \
@@ -72,6 +69,10 @@ SRC_FILES += \
   
 
 #$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_spim.c \
+#$(SDK_ROOT)/external/freertos/portable/GCC/nrf52/port.c \
+#$(SDK_ROOT)/external/freertos/portable/CMSIS/nrf52/port_cmsis.c \
+#$(SDK_ROOT)/external/freertos/portable/CMSIS/nrf52/port_cmsis_systick.c \
+
 
 INC_FOLDERS += \
   $(SDK_ROOT)/components/nfc/ndef/generic/message \
@@ -198,5 +199,8 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/log/src \
   $(SDK_ROOT)/external/freertos/source/include \
   $(SDK_ROOT)/external/freertos/config \
-  $(SDK_ROOT)/external/freertos/portable/CMSIS/nrf52 \
-  $(SDK_ROOT)/external/freertos/portable/GCC/nrf52 \
+
+
+
+#  $(SDK_ROOT)/external/freertos/portable/CMSIS/nrf52 \
+#  $(SDK_ROOT)/external/freertos/portable/GCC/nrf52 \

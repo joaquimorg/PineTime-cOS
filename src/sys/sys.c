@@ -1,5 +1,6 @@
 #include "sys.h"
 
+#include "nrf.h"
 #include "nrf_gpio.h"
 #include "nrf_drv_gpiote.h"
 #include "pinetime_board.h"
@@ -26,7 +27,7 @@
 
 
 #define SYS_TASK_DELAY          pdMS_TO_TICKS( 250 )
-#define SYS_TASK_DELAY_SLEEP    pdMS_TO_TICKS( 1000 )
+#define SYS_TASK_DELAY_SLEEP    pdMS_TO_TICKS( 30000 )
 
 TimerHandle_t buttonTimer;
 
@@ -110,7 +111,7 @@ static void gpiote_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t a
 }
 
 void vApplicationTickHook(void) {
-    
+     
 }
 
 
@@ -121,12 +122,6 @@ static void sys_task_function(void* pvParameter) {
     UNUSED_VARIABLE(xTaskCreate(main_app, "APP", configMINIMAL_STACK_SIZE + 800, NULL, 2, (TaskHandle_t *) NULL));    
     
     while (true) {
-
-        if(pinetimecos.state == Running) {
-            vTaskDelay(SYS_TASK_DELAY);
-        } else {
-            vTaskDelay(SYS_TASK_DELAY_SLEEP);
-        }
 
         // Read Charge Pin State
         if (nrf_gpio_pin_read(CHARGE_IRQ)) {
@@ -154,6 +149,12 @@ static void sys_task_function(void* pvParameter) {
 
         // Control the HR reading 
 
+        if(pinetimecos.state == Running) {
+            vTaskDelay(SYS_TASK_DELAY);
+        } else {
+            vTaskDelay(SYS_TASK_DELAY_SLEEP);
+        }
+
     }
     vTaskDelete(NULL); 
 }
@@ -172,6 +173,8 @@ void sys_init(void) {
     pinetimecos.chargingState = StatusOFF;
     pinetimecos.powerState = StatusOFF;
 
+    pinetimecos.backlightLevel = 2;
+
     pinetimecos.debug = 0;
 
     pinetimecos.batteryVoltage = 0.0f;
@@ -181,6 +184,8 @@ void sys_init(void) {
 
     pinetimecosBLE.notificationCount = 0;
 
+    pinetimecos.dontDisturb = true;
+
     nrf_drv_gpiote_init();
             
     nrf_ble_init();
@@ -189,7 +194,7 @@ void sys_init(void) {
 
     lvgl_init();
     backlight_init();
-    set_backlight_level(2);
+    set_backlight_level(pinetimecos.backlightLevel);
 
     battery_init();
     

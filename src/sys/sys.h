@@ -28,9 +28,10 @@ struct pinetimecOS {
 
      const char* resetReason;
 
-     uint8_t backlightValue;
+     uint8_t backlightLevel;
      uint16_t batteryVoltage;
      int batteryPercentRemaining;
+
      enum Status chargingState;
      enum Status powerState;
 
@@ -40,13 +41,13 @@ struct pinetimecOS {
 
      TimerHandle_t motor_timer;
      enum Status motorState;
+     bool dontDisturb;
 
      uint16_t displayTimeout;
+     
      uint16_t debug;
 
-     uint8_t xpos;
-     uint8_t ypos;
-     bool    click;
+
 };
 
 struct pinetimecOS pinetimecos;

@@ -6,6 +6,7 @@
         "system_error": "c",
         "xlocmon": "c",
         "xtr1common": "c",
-        "info.h": "c"
+        "info.h": "c",
+        "lv_theme_default.h": "c"
     }
 }

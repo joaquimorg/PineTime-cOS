@@ -59,16 +59,17 @@ static lv_obj_t *screen_clock_create(clock_app_t *ht, lv_obj_t * parent) {
 
     //lv_obj_t *scr = lv_scr_act();
 
-    lv_obj_set_style_bg_color(scr, lv_color_hex(0x000000), 0);
+    //lv_obj_set_style_bg_color(scr, lv_color_hex(0x000000), 0);
 
     get_UTC_time(&time_tmp);
+
 
     lv_obj_t * lv_timeh = lv_label_create(scr);    
     lv_obj_set_style_text_font(lv_timeh, &lv_font_clock_90, 0);
     lv_label_set_text_fmt(lv_timeh, "%02i", time_tmp.hour);
     lv_obj_set_style_text_align(lv_timeh, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_color(lv_timeh, lv_color_make(0xff, 0xff, 0xff), 0);
-    lv_obj_align(lv_timeh, LV_ALIGN_CENTER, -55, -40);
+    lv_obj_align(lv_timeh, LV_ALIGN_CENTER, -55, -35);
 
     ht->lv_timeh = lv_timeh;
 
@@ -77,7 +78,7 @@ static lv_obj_t *screen_clock_create(clock_app_t *ht, lv_obj_t * parent) {
     lv_label_set_text_fmt(lv_timem, "%02i", time_tmp.minutes);
     lv_obj_set_style_text_align(lv_timem, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_color(lv_timem, lv_color_make(0x00, 0xff, 0x00), 0);
-    lv_obj_align(lv_timem, LV_ALIGN_CENTER, 55, -40);
+    lv_obj_align(lv_timem, LV_ALIGN_CENTER, 55, -35);
 
     ht->lv_timem = lv_timem;
 
@@ -86,7 +87,7 @@ static lv_obj_t *screen_clock_create(clock_app_t *ht, lv_obj_t * parent) {
     lv_label_set_text_static(lv_times, ":");
     lv_obj_set_style_text_align(lv_times, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_color(lv_times, lv_color_make(0xff, 0xff, 0x00), 0);
-    lv_obj_align(lv_times, LV_ALIGN_CENTER, 0, -40);
+    lv_obj_align(lv_times, LV_ALIGN_CENTER, 0, -35);
 
     ht->lv_times = lv_times;
 
@@ -96,13 +97,12 @@ static lv_obj_t *screen_clock_create(clock_app_t *ht, lv_obj_t * parent) {
     lv_label_set_text_fmt(lv_date, "#00ff00 %s# %02i %s", get_days(time_tmp.week), time_tmp.day, get_months(time_tmp.month));
     lv_obj_set_style_text_align(lv_date, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_color(lv_date, lv_color_make(0xff, 0xff, 0xff), 0);
-    lv_obj_align(lv_date, LV_ALIGN_CENTER, 0, 20);
+    lv_obj_align(lv_date, LV_ALIGN_CENTER, 0, 25);
 
     ht->lv_date = lv_date;
 
-    lv_obj_t * lv_ble = lv_label_create(scr);    
-    lv_obj_align(lv_ble, LV_ALIGN_TOP_LEFT, 0, 0);
-    lv_obj_set_style_text_font(lv_ble, &lv_font_sys_20, 0);
+    /*lv_obj_t * lv_ble = lv_label_create(scr);    
+    lv_obj_align(lv_ble, LV_ALIGN_TOP_RIGHT, -5, 5);
     lv_label_set_text(lv_ble, "\xEE\xA4\x83");
     if ( pinetimecos.bluetoothState == StatusOFF ) {
         lv_obj_set_style_text_color(lv_ble, lv_color_hex(0x909090), 0);
@@ -114,15 +114,14 @@ static lv_obj_t *screen_clock_create(clock_app_t *ht, lv_obj_t * parent) {
 
     lv_obj_t * lv_power = lv_label_create(scr);
     lv_obj_set_style_text_color(lv_power, lv_color_hex(0xffffff), 0);
-    lv_obj_align(lv_power, LV_ALIGN_TOP_RIGHT, 0, 0);
-    lv_obj_set_style_text_font(lv_power, &lv_font_sys_20, 0);
+    lv_obj_align(lv_power, LV_ALIGN_TOP_RIGHT, -35, 5);
     if ( pinetimecos.chargingState == StatusOFF ) {
         lv_label_set_text_fmt(lv_power, "%s", battery_get_icon());
     } else {
         lv_label_set_text(lv_power, "\xEE\xA4\x85 \xEE\xA4\xA0");
     }
 
-    ht->lv_power = lv_power;
+    ht->lv_power = lv_power;*/
 
 
     ht->time_old = time_tmp;
@@ -144,11 +143,9 @@ static lv_obj_t *screen_clock_create(clock_app_t *ht, lv_obj_t * parent) {
             pinetimecosBLE.weather.todayMinTemp
             );
     } else {
-        lv_obj_align(ht->lv_demo, LV_ALIGN_BOTTOM_LEFT, 0, 0);
-        lv_label_set_text_fmt(ht->lv_demo, "%s", pinetimecos.resetReason);
+        lv_obj_align(ht->lv_demo, LV_ALIGN_BOTTOM_LEFT, 0, -25);
+        lv_label_set_text_static(ht->lv_demo, "");
     }
-
-    
 
     return scr;
 }
@@ -183,7 +180,7 @@ static int update(app_t *app) {
     if (time_tmp.day != ht->time_old.day)
         lv_label_set_text_fmt(ht->lv_date, "#00ff00 %s# %02i %s", get_days(time_tmp.week), time_tmp.day, get_months(time_tmp.month));
 
-    if ( pinetimecos.bluetoothState == StatusOFF ) {
+    /*if ( pinetimecos.bluetoothState == StatusOFF ) {
         lv_obj_set_style_text_color(ht->lv_ble, lv_color_hex(0x404040), 0);
     } else {
         lv_obj_set_style_text_color(ht->lv_ble, lv_color_hex(0x0000ff), 0);
@@ -193,7 +190,7 @@ static int update(app_t *app) {
         lv_label_set_text_fmt(ht->lv_power, "%s", battery_get_icon());
     } else {
         lv_label_set_text(ht->lv_power, "\xEE\xA4\x85 \xEE\xA4\xA0");
-    }
+    }*/
 
     //lv_label_set_text_fmt(ht->lv_demo, "%i", pinetimecos.debug);
     if ( pinetimecosBLE.weather.newData ) {
@@ -218,13 +215,16 @@ static int gesture(app_t *app, enum appGestures gesture) {
 
     switch (gesture) {
         case DirBottom:
-            load_application(Info, AnimDown);
+            load_application(Menu, AnimDown);
             break;
         case DirTop:
             load_application(Notification, AnimUp);
             break;
         case DirRight:
-            load_application(Menu, AnimRight);
+            // Harterate app
+            break;
+        case DirLeft:
+            // Step Counter app
             break;
         default:
             break;

@@ -32,8 +32,18 @@ INC_FOLDERS += \
   $(PROJ_DIR) \
   ./config \
 
+INC_FOLDERS += \
+  libs/FreeRTOS \
+
+SRC_FILES += \
+  libs/FreeRTOS/port.c \
+  libs/FreeRTOS/port_cmsis_systick.c \
+  libs/FreeRTOS/port_cmsis.c \
+
+
 include Makefile.nrf52
 include MakefileV8.lvgl
+
 
 # Source
 SRC_FILES += \
@@ -49,8 +59,8 @@ SRC_FILES += \
   $(PROJ_DIR)/hardware/flash.c \
   $(PROJ_DIR)/hardware/motor.c \
   $(PROJ_DIR)/theme/lv_theme_pinetime.c \
-  $(PROJ_DIR)/theme/lv_font_roboto_24.c \
-  $(PROJ_DIR)/theme/lv_font_sys_20.c \
+  $(PROJ_DIR)/theme/lv_font_24.c \
+  $(PROJ_DIR)/theme/lv_font_sys_48.c \
   $(PROJ_DIR)/theme/lv_font_clock_42.c \
   $(PROJ_DIR)/theme/lv_font_clock_90.c \
   $(PROJ_DIR)/apps/app.c \
@@ -61,9 +71,9 @@ SRC_FILES += \
 # APPS
 SRC_FILES += \
   $(PROJ_DIR)/apps/app/clock.c \
-  $(PROJ_DIR)/apps/app/info.c \
   $(PROJ_DIR)/apps/app/menu.c \
   $(PROJ_DIR)/apps/app/notification.c \
+  $(PROJ_DIR)/apps/app/debug.c \
 
 # Resources
 SRC_FILES += \

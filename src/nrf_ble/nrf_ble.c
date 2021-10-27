@@ -369,6 +369,12 @@ static void ble_stack_init(void) {
     err_code = nrf_sdh_ble_enable(&ram_start);
     APP_ERROR_CHECK(err_code);
 
+    err_code = sd_power_mode_set(NRF_POWER_MODE_LOWPWR);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_ENABLE);
+    APP_ERROR_CHECK(err_code);
+
     // Register a handler for BLE events.
     NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, ble_evt_handler, NULL);
 }
@@ -415,22 +421,8 @@ static void advertising_start(void* p_context) {
     APP_ERROR_CHECK(err_code);
 }
 
-
-static void timers_init(void) {
-    ret_code_t err_code = app_timer_init();
-    APP_ERROR_CHECK(err_code);
-}
-
-
-static void power_management_init(void) {
-    ret_code_t err_code;
-    err_code = nrf_pwr_mgmt_init();
-    APP_ERROR_CHECK(err_code);
-}
-
 void nrf_ble_init(void) {
-    //timers_init();
-    //power_management_init();
+
     ble_stack_init();
     gap_params_init();
     gatt_init();

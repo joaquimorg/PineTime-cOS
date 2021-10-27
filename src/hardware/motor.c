@@ -20,7 +20,13 @@ static void motor_timer_callback(TimerHandle_t xTimer) {
 void motor_start(uint8_t durationMs) {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-    if ( pinetimecos.motorState == StatusON ) return;
+    if ( pinetimecos.dontDisturb ) {
+        return;
+    }
+    if ( pinetimecos.motorState == StatusON ) {
+        return;
+    }
+    
     pinetimecos.motorState = StatusON;
     if (in_isr()) {
         xTimerChangePeriodFromISR( pinetimecos.motor_timer, pdMS_TO_TICKS( durationMs ), &xHigherPriorityTaskWoken );

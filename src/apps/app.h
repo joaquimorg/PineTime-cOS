@@ -8,10 +8,10 @@
 #include "lvgl.h"
 
 enum apps {
-     Clock     = 0x01,
-     Info      = 0x02,
-     Menu      = 0x03,
-     Notification = 0x04,
+     Debug          = 0x01,
+     Clock          = 0x02,     
+     Menu           = 0x03,
+     Notification   = 0x04,
 };
 
 enum appMessages {

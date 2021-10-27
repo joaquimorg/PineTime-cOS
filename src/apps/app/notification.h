@@ -13,6 +13,7 @@ typedef struct _notification_app {
     lv_obj_t *lv_count;
     lv_obj_t *lv_not;
     uint8_t current_not;
+    bool    reverse;
 } notification_app_t;
 
 

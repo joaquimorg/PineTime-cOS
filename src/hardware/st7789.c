@@ -371,7 +371,7 @@ void draw_bitmap (uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t* b
     //nrf_gpio_pin_clear(LCD_CSN);
     ppi_set();
 
-    int maxLength = 64; 
+    int maxLength = 32; 
     uint8_t byteArray[maxLength];
 
     /* setup display for writing */
