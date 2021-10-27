@@ -73,7 +73,7 @@ void cst816Init(void) {
   [1] EnConUD - Slide up and down to enable continuous operation
   [0] EnDClick - Enable Double-click action
   */
-  const uint8_t motionMask = 0b00000001;
+  const uint8_t motionMask = 0b00000111;
   i2c_write(TP_TWI_ADDR, 0xEC, &motionMask, 1);
 
   /*
@@ -83,17 +83,20 @@ void cst816Init(void) {
   [4] When EnMotion detects a gesture, it sends out a low pulse.
   [0] OnceWLP Long press gesture only sends out a low pulse signal.
   */
-  const uint8_t irqCtl = 0b00010000;
+  const uint8_t irqCtl = 0b00010001;
   i2c_write(TP_TWI_ADDR, 0xFA, &irqCtl, 1);
 
 }
 
 void cst816Get(void) {
 
-  uint8_t touchBuffer[8];
+  uint8_t touchBuffer[8] = {0};
 
   i2c_read(TP_TWI_ADDR, 0x01, touchBuffer, 6);
 
+  if ( touchBuffer[0] == 0xe0 ) {
+    return;
+  }
   tsData.gesture = touchBuffer[0];
   tsData.touchpoints = touchBuffer[1];
   tsData.event = touchBuffer[2] >> 6;

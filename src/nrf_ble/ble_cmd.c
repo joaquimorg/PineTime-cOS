@@ -181,7 +181,7 @@ void ble_command(uint8_t msg_type) {
 
         case COMMAND_FIND_DEVICE:
             pinetimecosBLE.find_device = inputBuffer[0];
-            motor_start(10);
+            motor_start(30);
             break;
 
         case COMMAND_VIBRATION:

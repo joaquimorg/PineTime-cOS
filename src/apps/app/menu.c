@@ -97,10 +97,7 @@ static void menu_create(menu_app_t *ht) {
     ht->lv_time = lv_time;
     lv_obj_set_style_text_color(ht->lv_time, lv_color_hex(0x606060), 0);
     lv_obj_align(ht->lv_time, LV_ALIGN_TOP_LEFT, 5, 5);
-    lv_label_set_text_fmt(ht->lv_time, "%02d:%02d %s", time_tmp.hour, time_tmp.minutes, get_days_low_short(time_tmp.week));
-
-    // -50 -30      50 -30
-    // -50 60       50 60
+    lv_label_set_text_fmt(ht->lv_time, "%02d:%02d", time_tmp.hour, time_tmp.minutes);
 
     lv_obj_t * btn_dont_disturb = lv_btn_create(ht->screen);
     lv_obj_add_event_cb(btn_dont_disturb, btn_handler_dont_disturb, LV_EVENT_CLICKED, NULL);
@@ -163,7 +160,7 @@ int update(app_t *app) {
         lv_label_set_text(ht->lv_power, "\xEE\xA4\x85 \xEE\xA4\xA0");
     }
 
-    lv_label_set_text_fmt(ht->lv_time, "%02d:%02d %s", time_tmp.hour, time_tmp.minutes, get_days_low_short(time_tmp.week));
+    lv_label_set_text_fmt(ht->lv_time, "%02d:%02d", time_tmp.hour, time_tmp.minutes);
 
     lv_label_set_text_static(ht->lbl_dont_disturb, pinetimecos.dontDisturb ? "\xEE\xA4\x8B" : "\xEE\xA4\x8C");
 

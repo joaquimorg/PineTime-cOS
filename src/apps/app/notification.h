@@ -14,6 +14,7 @@ typedef struct _notification_app {
     lv_obj_t *lv_not;
     uint8_t current_not;
     bool    reverse;
+    bool    empty;
 } notification_app_t;
 
 

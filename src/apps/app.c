@@ -160,7 +160,7 @@ void main_app(void* pvParameter) {
                         display_on();
                     }
                     if ( pinetimecosapp.activeApp != Notification ) {
-                        motor_start(10);
+                        motor_start(20);
                         load_application(Notification, AnimUp);
                         reload_idle_timer();
                     }

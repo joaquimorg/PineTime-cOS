@@ -4,6 +4,7 @@
 #include "app.h"
 #include "sys.h"
 #include "utils.h"
+#include "cst816.h"
 #include "lvgl.h"
 
 
@@ -40,14 +41,7 @@ static lv_obj_t *screen_create(debug_app_t *ht, lv_obj_t * parent) {
     lv_obj_t * lv_demo = lv_label_create(scr);    
     ht->lv_demo = lv_demo;
 
-    lv_label_set_text_fmt(ht->lv_demo, "Battery status\n%1i.%02i volts %d%%\n%d %% used %d%% frag.\nerror : 0x%08x\n%s", 
-        pinetimecos.batteryVoltage / 1000, 
-        pinetimecos.batteryVoltage % 1000 / 10, 
-        pinetimecos.batteryPercentRemaining, 
-        mon.used_pct, mon.frag_pct,
-        pinetimecos.debug,
-        pinetimecos.resetReason
-        );
+    lv_label_set_text_static(ht->lv_demo, "Debug..." );
     lv_obj_set_style_text_align(ht->lv_demo, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_color(ht->lv_demo, lv_color_hex(0xffffff), 0);
     lv_obj_align(ht->lv_demo, LV_ALIGN_TOP_MID, 0, 0);
@@ -110,13 +104,14 @@ static int update(app_t *app) {
 
     lv_mem_monitor(&mon);    
 
-    lv_label_set_text_fmt(ht->lv_demo, "Battery status\n%1i.%02i volts %d%%\n%d %% used %d%% frag.\nerror : 0x%08x\n%s", 
+    lv_label_set_text_fmt(ht->lv_demo, "Battery status\n%1i.%02i volts %d%%\n%d %% used %d%% frag.\nerror : 0x%08x\n%s\n%x %x", 
         pinetimecos.batteryVoltage / 1000, 
         pinetimecos.batteryVoltage % 1000 / 10, 
         pinetimecos.batteryPercentRemaining, 
         mon.used_pct, mon.frag_pct,
         pinetimecos.debug,
-        pinetimecos.resetReason
+        pinetimecos.resetReason,
+        tsData.gesture, tsData.event
         );
 
     //vTaskStats( app );
@@ -138,7 +133,7 @@ static int close(app_t *app) {
 
 static const app_spec_t debug_spec = {
     .name = "debug",
-    .updateInterval = 5000,
+    .updateInterval = 1000,
     .init = init,
     .update = update,
     .gesture = gesture,
