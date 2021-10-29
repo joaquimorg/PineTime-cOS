@@ -187,7 +187,9 @@ void sys_init(void) {
     pinetimecos.dontDisturb = true;
 
     nrf_drv_gpiote_init();
-            
+
+    motor_init();
+
     nrf_ble_init();
 
     //spiflash_init();
@@ -195,7 +197,7 @@ void sys_init(void) {
     lvgl_init();
     backlight_init();
     set_backlight_level(pinetimecos.backlightLevel);
-
+    
     battery_init();
     
     // Button
@@ -222,8 +224,6 @@ void sys_init(void) {
 
     // CHARGE_BASE_IRQ
     nrf_gpio_cfg_input(CHARGE_BASE_IRQ, NRF_GPIO_PIN_NOPULL);
-
-    motor_init();
 
     buttonTimer = xTimerCreate ("buttonTimer", 300, pdFALSE, NULL, button_timer_callback);
     idleTimer = xTimerCreate ("idleTimer", pdMS_TO_TICKS(pinetimecos.displayTimeout), pdFALSE, NULL, idle_timer_callback);

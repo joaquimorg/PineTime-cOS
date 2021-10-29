@@ -47,6 +47,7 @@ struct pinetimecOS {
      
      uint16_t debug;
 
+     char passkey[7];
 
 };
 

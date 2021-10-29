@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "cst816.h"
 #include "lvgl.h"
+#include "nrf_ble.h"
 
 
 static const app_spec_t debug_spec;
@@ -21,6 +22,16 @@ static inline debug_app_t *_from_app(app_t *app) {
 lv_mem_monitor_t mon;
 
 static void vTaskStats( app_t *app );
+
+static void event_handler(lv_event_t * e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+
+    if(code == LV_EVENT_CLICKED) {
+        delete_bonds();
+        load_application(Menu, AnimUp);
+    }
+}
 
 static lv_obj_t *screen_create(debug_app_t *ht, lv_obj_t * parent) {
 
@@ -45,6 +56,16 @@ static lv_obj_t *screen_create(debug_app_t *ht, lv_obj_t * parent) {
     lv_obj_set_style_text_align(ht->lv_demo, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_color(ht->lv_demo, lv_color_hex(0xffffff), 0);
     lv_obj_align(ht->lv_demo, LV_ALIGN_TOP_MID, 0, 0);
+
+    lv_obj_t * label;
+
+    lv_obj_t * btn1 = lv_btn_create(scr);
+    lv_obj_add_event_cb(btn1, event_handler, LV_EVENT_ALL, NULL);
+    lv_obj_align(btn1, LV_ALIGN_BOTTOM_MID, 0, 0);
+
+    label = lv_label_create(btn1);
+    lv_label_set_text(label, "Del Bounds");
+    lv_obj_center(label);
 
 
     /*lv_obj_t * lv_table = lv_table_create(scr);
@@ -104,14 +125,15 @@ static int update(app_t *app) {
 
     lv_mem_monitor(&mon);    
 
-    lv_label_set_text_fmt(ht->lv_demo, "Battery status\n%1i.%02i volts %d%%\n%d %% used %d%% frag.\nerror : 0x%08x\n%s\n%x %x", 
+    lv_label_set_text_fmt(ht->lv_demo, "%1i.%02i volts %d%%\n%d %% used %d%% frag.\nerror : 0x%08x\n%s\n%x %x\n%s", 
         pinetimecos.batteryVoltage / 1000, 
         pinetimecos.batteryVoltage % 1000 / 10, 
         pinetimecos.batteryPercentRemaining, 
         mon.used_pct, mon.frag_pct,
         pinetimecos.debug,
         pinetimecos.resetReason,
-        tsData.gesture, tsData.event
+        tsData.gesture, tsData.event,
+        pinetimecos.passkey
         );
 
     //vTaskStats( app );

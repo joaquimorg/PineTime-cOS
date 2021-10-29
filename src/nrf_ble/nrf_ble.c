@@ -16,6 +16,7 @@
 #include "nrf_ble_qwr.h"
 #include "app_timer.h"
 #include "ble_nus.h"
+#include "ble_dis.h"
 #include "ble_dfu.h"
 #include "app_util_platform.h"
 #include "nrf_pwr_mgmt.h"
@@ -26,6 +27,8 @@
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
 #include "app_error.h"
+#include "peer_manager.h"
+#include "peer_manager_handler.h"
 
 /* FreeRTOS related */
 #include "FreeRTOS.h"
@@ -34,6 +37,7 @@
 #include "sys.h"
 #include "app.h"
 #include "ble_cmd.h"
+#include "pinetime_board.h"
 
 #define SYS_TASK_DELAY        1 
 TaskHandle_t  sys_task_handle;
@@ -45,6 +49,12 @@ TaskHandle_t  app_task_handle;
 #define APP_FEATURE_NOT_SUPPORTED       BLE_GATT_STATUS_ATTERR_APP_BEGIN + 2
 
 #define DEVICE_NAME                     "PineTime-cOS"                  /**< Name of device. Will be included in the advertising data. */
+#define MANUFACTURER_NAME               "Pine64"
+#define MODEL_NUM                       "PINETIME-COS"                  /**< Model number. Will be passed to Device Information Service. */
+#define MANUFACTURER_ID                 0x1111111111                    /**< Manufacturer ID, part of System ID. Will be passed to Device Information Service. */
+#define ORG_UNIQUE_ID                   0x111111                        /**< Organizational Unique ID, part of System ID. Will be passed to Device Information Service. */
+
+
 #define NUS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN      /**< UUID type for the Nordic UART Service (vendor specific). */
 
 #define APP_BLE_OBSERVER_PRIO           3                               /**< Application's BLE observer priority. You shouldn't need to modify this value. */
@@ -62,6 +72,16 @@ TaskHandle_t  app_task_handle;
 #define MAX_CONN_PARAMS_UPDATE_COUNT    3                               /**< Number of attempts before giving up the connection parameter negotiation. */
 
 
+#define SEC_PARAM_BOND                      1                           /**< Perform bonding. */
+#define SEC_PARAM_MITM                      1                           /**< Man In The Middle protection not required. */
+#define SEC_PARAM_LESC                      0                           /**< LE Secure Connections not enabled. */
+#define SEC_PARAM_KEYPRESS                  0                           /**< Keypress notifications not enabled. */
+#define SEC_PARAM_IO_CAPABILITIES           BLE_GAP_IO_CAPS_DISPLAY_ONLY        /**< No I/O capabilities. */
+#define SEC_PARAM_OOB                       0                           /**< Out Of Band data not available. */
+#define SEC_PARAM_MIN_KEY_SIZE              7                           /**< Minimum encryption key size. */
+#define SEC_PARAM_MAX_KEY_SIZE              16                          /**< Maximum encryption key size. */
+#define PASSKEY_LENGTH                      6                           /**< Length of pass-key received by the stack for display. */
+
 BLE_NUS_DEF(m_nus, NRF_SDH_BLE_TOTAL_LINK_COUNT);                       /**< BLE NUS service instance. */
 NRF_BLE_GATT_DEF(m_gatt);                                               /**< GATT module instance. */
 NRF_BLE_QWR_DEF(m_qwr);                                                 /**< Context for the Queued Write module.*/
@@ -70,8 +90,9 @@ BLE_ADVERTISING_DEF(m_advertising);                                     /**< Adv
 static uint16_t   m_conn_handle = BLE_CONN_HANDLE_INVALID;              /**< Handle of the current connection. */
 //static uint16_t   m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - 3;            /**< Maximum length of data (in bytes) that can be transmitted to the peer by the Nordic UART service module. */
 static ble_uuid_t m_adv_uuids[] =                                       /**< Universally unique service identifier. */
-{
-    {BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}
+{    
+    {BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE},
+    {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE}
 };
 
 uint8_t inputEnd = 1, inputSize = 0;
@@ -93,12 +114,15 @@ static void gap_params_init(void) {
         strlen(DEVICE_NAME));
     APP_ERROR_CHECK(err_code);
 
+    err_code = sd_ble_gap_appearance_set(BLE_APPEARANCE_GENERIC_WATCH);
+    APP_ERROR_CHECK(err_code);
+
     memset(&gap_conn_params, 0, sizeof(gap_conn_params));
 
-    gap_conn_params.min_conn_interval = MIN_CONN_INTERVAL;
-    gap_conn_params.max_conn_interval = MAX_CONN_INTERVAL;
-    gap_conn_params.slave_latency = SLAVE_LATENCY;
-    gap_conn_params.conn_sup_timeout = CONN_SUP_TIMEOUT;
+    gap_conn_params.min_conn_interval   = MIN_CONN_INTERVAL;
+    gap_conn_params.max_conn_interval   = MAX_CONN_INTERVAL;
+    gap_conn_params.slave_latency       = SLAVE_LATENCY;
+    gap_conn_params.conn_sup_timeout    = CONN_SUP_TIMEOUT;
 
     err_code = sd_ble_gap_ppcp_set(&gap_conn_params);
     APP_ERROR_CHECK(err_code);
@@ -146,7 +170,7 @@ static void nus_data_handler(ble_nus_evt_t* p_evt) {
         }
 
         case BLE_NUS_EVT_COMM_STARTED:
-            //ble_connection();
+            ble_connection();
             break;
 
         default:
@@ -178,6 +202,8 @@ static void services_init(void) {
 
     uint32_t           err_code;
     ble_nus_init_t     nus_init;
+    ble_dis_init_t     dis_init;
+    ble_dis_sys_id_t   sys_id;
     nrf_ble_qwr_init_t qwr_init = { 0 };
 
     // Initialize Queued Write Module.
@@ -192,6 +218,21 @@ static void services_init(void) {
     nus_init.data_handler = nus_data_handler;
 
     err_code = ble_nus_init(&m_nus, &nus_init);
+    APP_ERROR_CHECK(err_code);
+
+    // Initialize Device Information Service.
+    memset(&dis_init, 0, sizeof(dis_init));
+
+    ble_srv_ascii_to_utf8(&dis_init.manufact_name_str, MANUFACTURER_NAME);
+    ble_srv_ascii_to_utf8(&dis_init.model_num_str, MODEL_NUM);
+
+    sys_id.manufacturer_id            = MANUFACTURER_ID;
+    sys_id.organizationally_unique_id = ORG_UNIQUE_ID;
+    dis_init.p_sys_id                 = &sys_id;
+
+    dis_init.dis_char_rd_sec = SEC_OPEN;
+
+    err_code = ble_dis_init(&dis_init);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -267,6 +308,7 @@ static void ble_evt_handler(ble_evt_t const* p_ble_evt, void* p_context) {
             app_push_message(UpdateBleConnection);
             app_push_message(WakeUp);
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
+            //advertising_start(NULL);
             break;
 
         case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
@@ -281,28 +323,6 @@ static void ble_evt_handler(ble_evt_t const* p_ble_evt, void* p_context) {
             APP_ERROR_CHECK(err_code);
         } break;
 
-        case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
-            // Pairing not supported
-            err_code = sd_ble_gap_sec_params_reply(m_conn_handle, BLE_GAP_SEC_STATUS_PAIRING_NOT_SUPP, NULL, NULL);
-            APP_ERROR_CHECK(err_code);
-            break;
-
-        case BLE_GATTS_EVT_SYS_ATTR_MISSING:
-            // No system attributes have been stored.
-            err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0, 0);
-            APP_ERROR_CHECK(err_code);
-            break;
-
-        /*case BLE_GAP_EVT_DATA_LENGTH_UPDATE_REQUEST:
-        {
-            ble_gap_data_length_params_t dl_params;
-
-            // Clearing the struct will effectively set members to @ref BLE_GAP_DATA_LENGTH_AUTO.
-            memset(&dl_params, 0, sizeof(ble_gap_data_length_params_t));
-            err_code = sd_ble_gap_data_length_update(p_ble_evt->evt.gap_evt.conn_handle, &dl_params, NULL);
-            APP_ERROR_CHECK(err_code);
-        } break;*/
-        
         case BLE_GATTC_EVT_TIMEOUT:
             // Disconnect on GATT Client timeout event.
             err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gattc_evt.conn_handle,
@@ -317,35 +337,28 @@ static void ble_evt_handler(ble_evt_t const* p_ble_evt, void* p_context) {
             APP_ERROR_CHECK(err_code);
             break;
 
-        /*case BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST:
+
+        case BLE_GAP_EVT_PASSKEY_DISPLAY:
         {
-            ble_gatts_evt_rw_authorize_request_t  req;
-            ble_gatts_rw_authorize_reply_params_t auth_reply;
+            memcpy(pinetimecos.passkey, p_ble_evt->evt.gap_evt.params.passkey_display.passkey, PASSKEY_LENGTH);
+            pinetimecos.passkey[PASSKEY_LENGTH] = 0;
 
-            req = p_ble_evt->evt.gatts_evt.params.authorize_request;
+            //NRF_LOG_INFO("Passkey: %s", nrf_log_push(passkey));
+        } break;
+        
+        case BLE_GAP_EVT_AUTH_KEY_REQUEST:
+            //NRF_LOG_INFO("BLE_GAP_EVT_AUTH_KEY_REQUEST");
+            break;
 
-            if (req.type != BLE_GATTS_AUTHORIZE_TYPE_INVALID)
-            {
-                if ((req.request.write.op == BLE_GATTS_OP_PREP_WRITE_REQ)     ||
-                    (req.request.write.op == BLE_GATTS_OP_EXEC_WRITE_REQ_NOW) ||
-                    (req.request.write.op == BLE_GATTS_OP_EXEC_WRITE_REQ_CANCEL))
-                {
-                    if (req.type == BLE_GATTS_AUTHORIZE_TYPE_WRITE)
-                    {
-                        auth_reply.type = BLE_GATTS_AUTHORIZE_TYPE_WRITE;
-                    }
-                    else
-                    {
-                        auth_reply.type = BLE_GATTS_AUTHORIZE_TYPE_READ;
-                    }
-                    auth_reply.params.write.gatt_status = APP_FEATURE_NOT_SUPPORTED;
-                    err_code = sd_ble_gatts_rw_authorize_reply(p_ble_evt->evt.gatts_evt.conn_handle,
-                                                               &auth_reply);
-                    APP_ERROR_CHECK(err_code);
-                }
-            }
-        } break; // BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST
-        */
+        case BLE_GAP_EVT_AUTH_STATUS:
+            /*NRF_LOG_INFO("BLE_GAP_EVT_AUTH_STATUS: status=0x%x bond=0x%x lv4: %d kdist_own:0x%x kdist_peer:0x%x",
+                          p_ble_evt->evt.gap_evt.params.auth_status.auth_status,
+                          p_ble_evt->evt.gap_evt.params.auth_status.bonded,
+                          p_ble_evt->evt.gap_evt.params.auth_status.sm1_levels.lv4,
+                          *((uint8_t *)&p_ble_evt->evt.gap_evt.params.auth_status.kdist_own),
+                          *((uint8_t *)&p_ble_evt->evt.gap_evt.params.auth_status.kdist_peer));*/
+            break;
+
         default:
             // No implementation needed.
             break;
@@ -368,11 +381,11 @@ static void ble_stack_init(void) {
     err_code = nrf_sdh_ble_enable(&ram_start);
     APP_ERROR_CHECK(err_code);
 
-    err_code = sd_power_mode_set(NRF_POWER_MODE_LOWPWR);
-    APP_ERROR_CHECK(err_code);
+    //err_code = sd_power_mode_set(NRF_POWER_MODE_LOWPWR);
+    //APP_ERROR_CHECK(err_code);
 
-    err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_ENABLE);
-    APP_ERROR_CHECK(err_code);
+    //err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_ENABLE);
+    //APP_ERROR_CHECK(err_code);
 
     // Register a handler for BLE events.
     NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, ble_evt_handler, NULL);
@@ -396,8 +409,8 @@ static void advertising_init(void) {
     memset(&init, 0, sizeof(init));
 
     init.advdata.name_type = BLE_ADVDATA_FULL_NAME;
-    init.advdata.include_appearance = false;
-    init.advdata.flags = BLE_GAP_ADV_FLAGS_LE_ONLY_LIMITED_DISC_MODE;
+    init.advdata.include_appearance = true;
+    init.advdata.flags = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
 
     init.srdata.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
     init.srdata.uuids_complete.p_uuids = m_adv_uuids;
@@ -405,14 +418,22 @@ static void advertising_init(void) {
     init.config.ble_adv_fast_enabled = true;
     init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
     init.config.ble_adv_fast_timeout = APP_ADV_DURATION;
-    init.config.ble_adv_whitelist_enabled      = false;
-    init.config.ble_adv_on_disconnect_disabled = true;
     init.evt_handler = on_adv_evt;
 
     err_code = ble_advertising_init(&m_advertising, &init);
     APP_ERROR_CHECK(err_code);
 
     ble_advertising_conn_cfg_tag_set(&m_advertising, APP_BLE_CONN_CFG_TAG);
+}
+
+void delete_bonds(void)
+{
+    ret_code_t err_code;
+
+    //NRF_LOG_INFO("Erase bonds!");
+
+    err_code = pm_peers_delete();
+    APP_ERROR_CHECK(err_code);
 }
 
 static void advertising_start(void* p_context) {
@@ -422,6 +443,58 @@ static void advertising_start(void* p_context) {
     APP_ERROR_CHECK(err_code);
 }
 
+
+static void pm_evt_handler(pm_evt_t const * p_evt)
+{
+
+    pm_handler_on_pm_evt(p_evt);
+    pm_handler_disconnect_on_sec_failure(p_evt);
+    pm_handler_flash_clean(p_evt);
+
+    switch (p_evt->evt_id)
+    {
+
+        case PM_EVT_PEERS_DELETE_SUCCEEDED:
+            advertising_start(NULL);
+            break;
+
+        default:
+            break;
+    }
+}
+
+static void peer_manager_init(void)
+{
+    ble_gap_sec_params_t sec_param;
+    ret_code_t           err_code;
+
+    err_code = pm_init();
+    APP_ERROR_CHECK(err_code);
+
+    memset(&sec_param, 0, sizeof(ble_gap_sec_params_t));
+
+    // Security parameters to be used for all security procedures.
+    sec_param.bond           = SEC_PARAM_BOND;
+    sec_param.mitm           = SEC_PARAM_MITM;
+    sec_param.lesc           = SEC_PARAM_LESC;
+    sec_param.keypress       = SEC_PARAM_KEYPRESS;
+    sec_param.io_caps        = SEC_PARAM_IO_CAPABILITIES;
+    sec_param.oob            = SEC_PARAM_OOB;
+    sec_param.min_key_size   = SEC_PARAM_MIN_KEY_SIZE;
+    sec_param.max_key_size   = SEC_PARAM_MAX_KEY_SIZE;
+    sec_param.kdist_own.enc  = 1;
+    sec_param.kdist_own.id   = 1;
+    sec_param.kdist_peer.enc = 1;
+    sec_param.kdist_peer.id  = 1;
+
+    err_code = pm_sec_params_set(&sec_param);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = pm_register(pm_evt_handler);
+    APP_ERROR_CHECK(err_code);
+}
+
+
 void nrf_ble_init(void) {
 
     ble_stack_init();
@@ -430,6 +503,8 @@ void nrf_ble_init(void) {
     services_init();
     advertising_init();
     conn_params_init();
+    
+    peer_manager_init();
 
     nrf_sdh_freertos_init(advertising_start, NULL);
 }
