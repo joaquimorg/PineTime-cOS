@@ -15,6 +15,7 @@ void display_pause();
 void display_resume();
 
 void st7789_vertical_scroll_definition(uint16_t topFixedLines, uint16_t scrollLines, uint16_t bottomFixedLines, uint16_t line);
+void st7789_vertical_scroll_start_address(uint16_t line);
 
 void st7789_sleep_out(void);
 void st7789_sleep_in(void);

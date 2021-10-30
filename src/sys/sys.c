@@ -110,14 +110,47 @@ static void gpiote_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t a
     
 }
 
-void vApplicationTickHook(void) {
-     
-}
-
-
 static void sys_task_function(void* pvParameter) {
 
     UNUSED_PARAMETER(pvParameter);    
+
+    //spiflash_init();
+
+    lvgl_init();
+    backlight_init();
+    set_backlight_level(pinetimecos.backlightLevel);
+    
+    battery_init();
+    
+    // Button
+    nrf_gpio_cfg_output(KEY_ENABLE);
+    nrf_gpio_pin_set(KEY_ENABLE);
+
+    nrf_gpio_cfg_sense_input(KEY_ACTION, NRF_GPIO_PIN_PULLDOWN, NRF_GPIO_PIN_SENSE_HIGH);
+    nrf_drv_gpiote_in_config_t key_config = GPIOTE_CONFIG_IN_SENSE_LOTOHI(false);
+    key_config.pull = NRF_GPIO_PIN_PULLDOWN;
+    key_config.skip_gpio_setup = true;
+    nrf_drv_gpiote_in_init(KEY_ACTION, &key_config, gpiote_pin_handler);    
+    
+
+    // Touch irq
+    nrf_gpio_cfg_sense_input(TP_IRQ, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_drv_gpiote_in_config_t tp_config = GPIOTE_CONFIG_IN_SENSE_HITOLO(false);
+    tp_config.pull = NRF_GPIO_PIN_PULLUP;
+    tp_config.skip_gpio_setup = true;
+    nrf_drv_gpiote_in_init(TP_IRQ, &tp_config, gpiote_pin_handler);
+    
+    // CHARGE_IRQ
+    nrf_gpio_cfg_input(CHARGE_IRQ, NRF_GPIO_PIN_NOPULL);
+
+    // CHARGE_BASE_IRQ
+    nrf_gpio_cfg_input(CHARGE_BASE_IRQ, NRF_GPIO_PIN_NOPULL);
+
+    motor_init();
+
+    buttonTimer = xTimerCreate ("buttonTimer", 300, pdFALSE, NULL, button_timer_callback);
+    idleTimer = xTimerCreate ("idleTimer", pdMS_TO_TICKS(pinetimecos.displayTimeout), pdFALSE, NULL, idle_timer_callback);
+    bleTimer = xTimerCreate ("bleTimer", pdMS_TO_TICKS(30000), pdTRUE, NULL, ble_timer_callback);
 
     UNUSED_VARIABLE(xTaskCreate(main_app, "APP", configMINIMAL_STACK_SIZE + 800, NULL, 2, (TaskHandle_t *) NULL));    
     
@@ -186,50 +219,11 @@ void sys_init(void) {
 
     pinetimecos.dontDisturb = true;
 
-    nrf_drv_gpiote_init();
-
-    motor_init();
+    nrf_drv_gpiote_init();    
 
     nrf_ble_init();
 
-    //spiflash_init();
-
-    lvgl_init();
-    backlight_init();
-    set_backlight_level(pinetimecos.backlightLevel);
-    
-    battery_init();
-    
-    // Button
-
-    nrf_gpio_cfg_output(KEY_ENABLE);
-    nrf_gpio_pin_set(KEY_ENABLE);
-
-    nrf_gpio_cfg_sense_input(KEY_ACTION, NRF_GPIO_PIN_PULLDOWN, NRF_GPIO_PIN_SENSE_HIGH);
-    nrf_drv_gpiote_in_config_t key_config = GPIOTE_CONFIG_IN_SENSE_LOTOHI(false);
-    key_config.pull = NRF_GPIO_PIN_PULLDOWN;
-    key_config.skip_gpio_setup = true;
-    nrf_drv_gpiote_in_init(KEY_ACTION, &key_config, gpiote_pin_handler);    
-    
-
-    // Touch irq
-    nrf_gpio_cfg_sense_input(TP_IRQ, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-    nrf_drv_gpiote_in_config_t tp_config = GPIOTE_CONFIG_IN_SENSE_HITOLO(false);
-    tp_config.pull = NRF_GPIO_PIN_PULLUP;
-    tp_config.skip_gpio_setup = true;
-    nrf_drv_gpiote_in_init(TP_IRQ, &tp_config, gpiote_pin_handler);
-    
-    // CHARGE_IRQ
-    nrf_gpio_cfg_input(CHARGE_IRQ, NRF_GPIO_PIN_NOPULL);
-
-    // CHARGE_BASE_IRQ
-    nrf_gpio_cfg_input(CHARGE_BASE_IRQ, NRF_GPIO_PIN_NOPULL);
-
-    buttonTimer = xTimerCreate ("buttonTimer", 300, pdFALSE, NULL, button_timer_callback);
-    idleTimer = xTimerCreate ("idleTimer", pdMS_TO_TICKS(pinetimecos.displayTimeout), pdFALSE, NULL, idle_timer_callback);
-    bleTimer = xTimerCreate ("bleTimer", pdMS_TO_TICKS(30000), pdTRUE, NULL, ble_timer_callback);
-
-    UNUSED_VARIABLE(xTaskCreate(sys_task_function, "SYS", configMINIMAL_STACK_SIZE, NULL, 2, (TaskHandle_t *) NULL));
+    UNUSED_VARIABLE(xTaskCreate(sys_task_function, "SYS", configMINIMAL_STACK_SIZE + 300, NULL, 2, (TaskHandle_t *) NULL));
     //UNUSED_VARIABLE(xTaskCreate(main_app, "APP", configMINIMAL_STACK_SIZE + 512, NULL, 2, (TaskHandle_t *) NULL));
    
 }

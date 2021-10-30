@@ -22,6 +22,7 @@ void display_off(void) {
     xTimerStop(idleTimer, 0);
     set_backlight_level(0);    
     st7789_sleep();
+    sd_power_mode_set(NRF_POWER_MODE_LOWPWR);
 }
 
 void display_on(void) {
@@ -29,6 +30,7 @@ void display_on(void) {
     st7789_wake_up();
     pinetimecos.state = Running;
     set_backlight_level(pinetimecos.backlightLevel);
+    sd_power_mode_set(NRF_POWER_MODE_CONSTLAT);
 }
 
 

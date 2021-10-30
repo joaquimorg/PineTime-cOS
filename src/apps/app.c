@@ -18,6 +18,7 @@
 #include "watchdog.h"
 #include "pinetime_board.h"
 
+#include "passkey.h"
 #include "clock.h"
 #include "debug.h"
 #include "menu.h"
@@ -155,6 +156,15 @@ void main_app(void* pvParameter) {
                 case UpdateBleConnection:
                     break;
 
+                case ShowPasskey:
+                    if ( pinetimecosapp.activeApp != Passkey ) {
+                        motor_start(20);
+                        load_application(Passkey, AnimNone);
+                        reload_idle_timer();
+                    }
+                    break;
+
+
                 case NewNotification:
                     if(pinetimecos.state == Sleep) {
                         display_on();
@@ -198,6 +208,11 @@ void load_application(enum apps app, enum RefreshDirections dir) {
     set_refresh_direction(dir);
     pinetimecosapp.activeApp = app;
     switch (app) {
+
+        case Passkey:
+            run_app(APP_PASSKEY);
+            return_app(Clock, DirBottom, AnimNone);
+            break;
 
         case Debug:
             run_app(APP_DEBUG);

@@ -5,9 +5,7 @@
 #include "nrf_gpio.h"
 #include "nrf_delay.h"
 #include "nrf_sdh_freertos.h"
-#include "nrf_log.h"
-#include "nrf_log_ctrl.h"
-#include "nrf_log_default_backends.h"
+#include "nrf_drv_power.h"
 #include "app_error.h"
 #include "app_error_weak.h"
 #include "FreeRTOS.h"
@@ -78,13 +76,6 @@ static void clock_init(void) {
 }
 
 
-static void log_init(void) {
-    ret_code_t err_code = NRF_LOG_INIT(NULL);
-    APP_ERROR_CHECK(err_code);
-
-    //NRF_LOG_DEFAULT_BACKENDS_INIT();
-}
-
 static void i2c_clean_up(void) {
     // Unblock i2c?
     nrf_gpio_cfg(TWI_SCL,
@@ -106,13 +97,31 @@ static void i2c_clean_up(void) {
 
 // ---------------------------------------------------------------------------------------------------------
 
+#define FPU_EXCEPTION_MASK 0x0000009F
+
+void FPU_IRQHandler(void)
+{
+    uint32_t *fpscr = (uint32_t *)(FPU->FPCAR+0x40);
+    (void)__get_FPSCR();
+
+    *fpscr = *fpscr & ~(FPU_EXCEPTION_MASK);
+}
+
 int main(void) {
 
+    ret_code_t ret;
+
+    NVIC_SetPriority(FPU_IRQn, APP_IRQ_PRIORITY_LOW);
+    NVIC_EnableIRQ(FPU_IRQn);
+
     // WDT problems on init from bootloader
-    NRF_WDT->RR[0] = WDT_RR_RR_Reload;
-    NRF_WDT->TASKS_START = 0;    
+    //NRF_WDT->RR[0] = WDT_RR_RR_Reload;
+    //NRF_WDT->TASKS_START = 0; 
 
     i2c_clean_up();
+    
+    ret = nrf_drv_power_init(NULL);
+    APP_ERROR_CHECK(ret);
 
     //log_init();
     clock_init();

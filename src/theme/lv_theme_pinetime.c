@@ -3,7 +3,7 @@
 #include "lv_theme_pinetime.h"
 
 
-#define RADIUS_DEFAULT          20
+#define RADIUS_DEFAULT          30
 
 /*SCREEN*/
 #define DARK_COLOR_PRIMARY      lv_color_hex(0x111111)

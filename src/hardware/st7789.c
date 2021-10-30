@@ -286,6 +286,7 @@ void st7789_row_address_set() {
 void st7789_sleep(void) {
     st7789_sleep_in();
     nrf_delay_ms(50);
+    st7789_display_off();
     //nrf_gpio_cfg_default(pinDataCommand);  
 }
 
@@ -425,9 +426,9 @@ void draw_bitmap (uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t* b
 
         display_sendbuffer_noblock(bitmap+offset, areaToWrite * 2);
         display_sendbuffer_finish();
-        ppi_clr();
         area -= areaToWrite;
-    }
+    }    
+    ppi_clr();
     
     //nrf_gpio_pin_set(LCD_CSN);
 }
@@ -524,9 +525,8 @@ void st7789_init(void) {
     NRF_PPI->CH[7].TEP = (uint32_t) &NRF_TIMER4->TASKS_START;
 
     cmd_enable(1);
-
-    st7789_vertical_scroll_definition(0, 320, 0, 0);    
-
+    //verticalScrollingStartAddress = 0; 
+    //st7789_vertical_scroll_definition(0, 320, 0, verticalScrollingStartAddress);
     draw_square(0, 0, 239, 239, RGB2COLOR(0x00, 0x00, 0x00));
 
 }

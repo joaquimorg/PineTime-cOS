@@ -22,8 +22,8 @@ uint16_t writeOffset = 0;
 uint16_t scrollOffset = 0;
 
 static lv_disp_draw_buf_t draw_buf_dsc;
-static lv_color_t buf_2_1[DISP_HOR_RES * 10];
-static lv_color_t buf_2_2[DISP_HOR_RES * 10];
+static lv_color_t buf_2_1[DISP_HOR_RES * 15];
+//static lv_color_t buf_2_2[DISP_HOR_RES * 10];
 
 
 static void touchpad_read(lv_indev_drv_t* drv, lv_indev_data_t* data);
@@ -38,7 +38,7 @@ void lvgl_init(void) {
 
     lv_init();
 
-    lv_disp_draw_buf_init(&draw_buf_dsc, buf_2_1, buf_2_2, DISP_HOR_RES * 10);   // Initialize the display buffer
+    lv_disp_draw_buf_init(&draw_buf_dsc, buf_2_1, NULL, DISP_HOR_RES * 15);   // Initialize the display buffer
 
     static lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);    // Basic initialization
@@ -136,7 +136,8 @@ static void disp_flush(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_
                 toScroll -= scrollOffset;
                 scrollOffset = (totalNbLines) - toScroll;
             }
-            st7789_vertical_scroll_definition(0, 320, 0, scrollOffset);
+            st7789_vertical_scroll_definition(0, totalNbLines, 0, scrollOffset);
+            //st7789_vertical_scroll_start_address(scrollOffset);
         }
     } else if(pinetimecosapp.refreshDirection == AnimUp) {
 
@@ -149,7 +150,8 @@ static void disp_flush(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_
                 scrollOffset += height;
             }
             scrollOffset = scrollOffset % totalNbLines;
-            st7789_vertical_scroll_definition(0, 320, 0, scrollOffset);
+            st7789_vertical_scroll_definition(0, totalNbLines, 0, scrollOffset);
+            //st7789_vertical_scroll_start_address(scrollOffset);
         }
     } else if(pinetimecosapp.refreshDirection == AnimLeft) {
         if(area->x2 == visibleNbLines - 1) {

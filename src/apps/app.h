@@ -12,6 +12,7 @@ enum apps {
      Clock          = 0x02,     
      Menu           = 0x03,
      Notification   = 0x04,
+     Passkey        = 0x05,
 };
 
 enum appMessages {
@@ -23,6 +24,7 @@ enum appMessages {
      Charging               = 0x06,
      Gesture                = 0x07,
      NewNotification        = 0x08,
+     ShowPasskey            = 0x09,
 };
 
 enum appGestures {
