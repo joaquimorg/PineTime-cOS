@@ -32,13 +32,13 @@ INC_FOLDERS += \
   $(PROJ_DIR) \
   ./config \
 
-INC_FOLDERS += \
-  libs/FreeRTOS \
+#INC_FOLDERS += \
+#  libs/FreeRTOS \
 
-SRC_FILES += \
-  libs/FreeRTOS/port.c \
-  libs/FreeRTOS/port_cmsis_systick.c \
-  libs/FreeRTOS/port_cmsis.c \
+#SRC_FILES += \
+#  libs/FreeRTOS/port.c \
+#  libs/FreeRTOS/port_cmsis_systick.c \
+#  libs/FreeRTOS/port_cmsis.c \
 
 
 include Makefile.nrf52
@@ -108,8 +108,8 @@ OPT = -Os -g3 -fno-exceptions -fno-non-call-exceptions
 # C flags common to all targets
 CFLAGS += $(OPT)
 #CFLAGS += -DDEBUG 
-#CFLAGS += -DAPP_TIMER_V2
-#CFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
+CFLAGS += -DAPP_TIMER_V2
+CFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
 CFLAGS += -DBOARD_PCA10040
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DFLOAT_ABI_HARD
@@ -139,8 +139,8 @@ CXXFLAGS += $(OPT)
 ASMFLAGS += -mcpu=cortex-m4
 ASMFLAGS += -mthumb -mabi=aapcs
 ASMFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
-#ASMFLAGS += -DAPP_TIMER_V2
-#ASMFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
+ASMFLAGS += -DAPP_TIMER_V2
+ASMFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
 ASMFLAGS += -DBOARD_PCA10040
 ASMFLAGS += -DCONFIG_GPIO_AS_PINRESET
 ASMFLAGS += -DFLOAT_ABI_HARD

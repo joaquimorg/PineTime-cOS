@@ -12,6 +12,7 @@
 #include "task.h"
 #include "pinetime_board.h"
 #include "sys.h"
+#include "st7789.h"
 #include "backlight.h"
 
 // ---------------------------------------------------------------------------------------------------------
@@ -22,6 +23,9 @@ static void on_error( uint8_t err ) {
 
     //NVIC_SystemReset();    
     
+    st7789_vertical_scroll_definition(0, 320, 0, 0);
+    draw_square(0, 0, 239, 239, RGB2COLOR(0xa0, 0xa0, 0xa0));
+
     for (;;)
     {
         // show error blinking backlight n times
@@ -35,7 +39,7 @@ static void on_error( uint8_t err ) {
                 set_backlight_level(3);
             }
             
-            nrf_delay_ms(1000);
+            nrf_delay_ms(2000);
         }
         NVIC_SystemReset();
     }
@@ -43,18 +47,21 @@ static void on_error( uint8_t err ) {
 
 void assert_nrf_callback(uint16_t line_num, const uint8_t* p_file_name) {
     //NRF_LOG_ERROR("%s:%d", p_file_name, line_num);
+    NRF_BREAKPOINT_COND;
     on_error(1);
 }
 
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name) {
     //NRF_LOG_ERROR("%s:%d", p_file_name, line_num);
     //pinetimecos.debug = error_code;
+    NRF_BREAKPOINT_COND;
     on_error(2);
 }
 
 
 void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info) {
     //NRF_LOG_ERROR("Received a fault! id: 0x%08x, pc: 0x%08x, info: 0x%08x", id, pc, info);
+    NRF_BREAKPOINT_COND;
     on_error(3);
 }
 
@@ -64,7 +71,8 @@ void app_error_handler_bare(uint32_t error_code) {
 
     //NRF_LOG_ERROR("Received an error: 0x%08x!", error_code);
     pinetimecos.debug = error_code;
-    //on_error(4);
+    //on_error(error_code);
+    NRF_BREAKPOINT_COND;
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -97,14 +105,8 @@ static void i2c_clean_up(void) {
 
 // ---------------------------------------------------------------------------------------------------------
 
-#define FPU_EXCEPTION_MASK 0x0000009F
-
-void FPU_IRQHandler(void)
-{
-    uint32_t *fpscr = (uint32_t *)(FPU->FPCAR+0x40);
-    (void)__get_FPSCR();
-
-    *fpscr = *fpscr & ~(FPU_EXCEPTION_MASK);
+void vApplicationTickHook(void) {
+    
 }
 
 int main(void) {

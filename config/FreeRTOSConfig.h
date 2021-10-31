@@ -63,7 +63,7 @@
 #define configTICK_RATE_HZ                                                        1024
 #define configMAX_PRIORITIES                                                      ( 3 )
 #define configMINIMAL_STACK_SIZE                                                  ( 256 )
-#define configTOTAL_HEAP_SIZE                                                     ( 1024*14 )
+#define configTOTAL_HEAP_SIZE                                                     ( 1024*10 )
 #define configMAX_TASK_NAME_LEN                                                   ( 4 )
 #define configUSE_16_BIT_TICKS                                                    0
 #define configIDLE_SHOULD_YIELD                                                   1
@@ -102,6 +102,13 @@
 #define configEXPECTED_IDLE_TIME_BEFORE_SLEEP                                     2
 
 /* Tickless idle/low power functionality. */
+
+/* Fix for Errata #87 nrf52832 */                                       \
+#define configPRE_SLEEP_PROCESSING(xMIdleTime) if ( xMIdleTime > 0 ) {  \
+        __set_FPSCR(__get_FPSCR() & ~(0x0000009F));                     \
+        (void) __get_FPSCR();                                           \
+         NVIC_ClearPendingIRQ(FPU_IRQn);                                \
+}
 
 
 /* Define to trap errors during development. */

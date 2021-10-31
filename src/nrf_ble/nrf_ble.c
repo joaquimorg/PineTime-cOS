@@ -59,12 +59,12 @@ TaskHandle_t  app_task_handle;
 
 #define APP_BLE_OBSERVER_PRIO           3                               /**< Application's BLE observer priority. You shouldn't need to modify this value. */
 
-#define APP_ADV_INTERVAL                250                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
+#define APP_ADV_INTERVAL                500                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 
 #define APP_ADV_DURATION                18000                                       /**< The advertising duration (180 seconds) in units of 10 milliseconds. */
 
-#define MIN_CONN_INTERVAL               MSEC_TO_UNITS(20, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
-#define MAX_CONN_INTERVAL               MSEC_TO_UNITS(75, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (75 ms), Connection interval uses 1.25 ms units. */
+#define MIN_CONN_INTERVAL               MSEC_TO_UNITS(400, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
+#define MAX_CONN_INTERVAL               MSEC_TO_UNITS(401, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (75 ms), Connection interval uses 1.25 ms units. */
 #define SLAVE_LATENCY                   0                                           /**< Slave latency. */
 #define CONN_SUP_TIMEOUT                MSEC_TO_UNITS(4000, UNIT_10_MS)             /**< Connection supervisory timeout (4 seconds), Supervision Timeout uses 10 ms units. */
 #define FIRST_CONN_PARAMS_UPDATE_DELAY  APP_TIMER_TICKS(5000)                       /**< Time from initiating event (connect or start of notification) to first time sd_ble_gap_conn_param_update is called (5 seconds). */
@@ -186,15 +186,15 @@ void send_data_ble(uint8_t * data, uint16_t size) {
 
     do {       
         err_code = ble_nus_data_send(&m_nus, data, (uint16_t*)&length, m_conn_handle);
-        if ((err_code != NRF_ERROR_INVALID_STATE) &&
+        /*if ((err_code != NRF_ERROR_INVALID_STATE) &&
             (err_code != NRF_ERROR_RESOURCES) &&
             (err_code != NRF_ERROR_NOT_FOUND))
         {
             APP_ERROR_CHECK(err_code);
-        }
+        }*/
     } while (err_code == NRF_ERROR_RESOURCES);
 
-    APP_ERROR_CHECK(err_code);
+    //APP_ERROR_CHECK(err_code);
 
 }
 
@@ -325,8 +325,8 @@ static void ble_evt_handler(ble_evt_t const* p_ble_evt, void* p_context) {
 
         case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
             // Pairing not supported.
-            err_code = sd_ble_gap_sec_params_reply(m_conn_handle, BLE_GAP_SEC_STATUS_PAIRING_NOT_SUPP, NULL, NULL);
-            APP_ERROR_CHECK(err_code);
+            //err_code = sd_ble_gap_sec_params_reply(m_conn_handle, BLE_GAP_SEC_STATUS_PAIRING_NOT_SUPP, NULL, NULL);
+            //APP_ERROR_CHECK(err_code);
             break;
 
         case BLE_GATTS_EVT_SYS_ATTR_MISSING:
@@ -350,8 +350,8 @@ static void ble_evt_handler(ble_evt_t const* p_ble_evt, void* p_context) {
             break;
 
         case BLE_EVT_USER_MEM_REQUEST:
-            err_code = sd_ble_user_mem_reply(p_ble_evt->evt.gattc_evt.conn_handle, NULL);
-            APP_ERROR_CHECK(err_code);
+            //err_code = sd_ble_user_mem_reply(p_ble_evt->evt.gattc_evt.conn_handle, NULL);
+            //APP_ERROR_CHECK(err_code);
             break;
 
         case BLE_GAP_EVT_PASSKEY_DISPLAY:
@@ -400,10 +400,12 @@ static void ble_stack_init(void) {
     err_code = nrf_sdh_ble_enable(&ram_start);
     APP_ERROR_CHECK(err_code);
 
-    err_code = sd_power_mode_set(NRF_POWER_MODE_CONSTLAT);
+    pinetimecos.app_ram_base = ram_start;
+
+    err_code = sd_power_mode_set(NRF_POWER_MODE_LOWPWR);
     APP_ERROR_CHECK(err_code);
 
-    err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_DISABLE);
+    err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_ENABLE);
     APP_ERROR_CHECK(err_code);
 
     // Register a handler for BLE events.
@@ -417,8 +419,8 @@ void gatt_init(void) {
     err_code = nrf_ble_gatt_init(&m_gatt, NULL);
     APP_ERROR_CHECK(err_code);
 
-    err_code = nrf_ble_gatt_att_mtu_periph_set(&m_gatt, NRF_SDH_BLE_GAP_DATA_LENGTH);
-    APP_ERROR_CHECK(err_code);    
+    //err_code = nrf_ble_gatt_att_mtu_periph_set(&m_gatt, NRF_SDH_BLE_GAP_DATA_LENGTH);
+    //APP_ERROR_CHECK(err_code);    
 }
 
 static void advertising_init(void) {

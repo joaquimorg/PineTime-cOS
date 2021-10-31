@@ -7,16 +7,15 @@ MEMORY
 {
   FLASH (rx) : ORIGIN = 0x19000, LENGTH = 0x6D000 - 0x19000
 
-  /* SRAM required by S132 depend on
+  /* SRAM required by S112 depend on
    * - Attribute Table Size
    * - Vendor UUID count
    * - Max ATT MTU
    * - Concurrent connection peripheral + central + secure links
    * - Event Len, HVN queue, Write CMD queue
    */ 
-  RAM (rwx) :  ORIGIN = 0x20003400, LENGTH = 0x20010000 - 0x20003400
+  RAM (rwx) :  ORIGIN = 0x20002300, LENGTH = 0x20010000 - 0x20002300
   
-  uicr_bootloader_start_address (r) : ORIGIN = 0x10001014, LENGTH = 0x4
 }
 
 SECTIONS

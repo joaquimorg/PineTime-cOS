@@ -2741,7 +2741,7 @@
 // <e> NRFX_PRS_ENABLED - nrfx_prs - Peripheral Resource Sharing module
 //==========================================================
 #ifndef NRFX_PRS_ENABLED
-#define NRFX_PRS_ENABLED 0
+#define NRFX_PRS_ENABLED 1
 #endif
 // <q> NRFX_PRS_BOX_0_ENABLED  - Enables box 0 in the module.
  
@@ -2775,7 +2775,7 @@
  
 
 #ifndef NRFX_PRS_BOX_4_ENABLED
-#define NRFX_PRS_BOX_4_ENABLED 1
+#define NRFX_PRS_BOX_4_ENABLED 0
 #endif
 
 // <e> NRFX_PRS_CONFIG_LOG_ENABLED - Enables logging in the module.
@@ -5432,7 +5432,7 @@
 // <8=> 256x 
 
 #ifndef SAADC_CONFIG_OVERSAMPLE
-#define SAADC_CONFIG_OVERSAMPLE 2
+#define SAADC_CONFIG_OVERSAMPLE 0
 #endif
 
 // <q> SAADC_CONFIG_LP_MODE  - Enabling low power mode
@@ -12037,4 +12037,3 @@
 
 // <<< end of configuration section >>>
 #endif //SDK_CONFIG_H
-

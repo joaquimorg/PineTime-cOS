@@ -48,6 +48,7 @@ struct pinetimecOS {
      uint16_t debug;
 
      char passkey[7];
+     uint32_t app_ram_base;
 
 };
 

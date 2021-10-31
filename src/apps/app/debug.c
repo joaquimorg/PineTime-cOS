@@ -105,14 +105,15 @@ static int update(app_t *app) {
 
     lv_mem_monitor(&mon);    
 
-    lv_label_set_text_fmt(ht->lv_demo, "%1i.%02i volts %d%%\n%d %% used %d%% frag.\nerror : 0x%08x\n%s\n%x %x", 
+    lv_label_set_text_fmt(ht->lv_demo, "%1i.%02i volts %d%%\n%d %% used %d%% frag.\nerror : 0x%08x\n%s\n%x %x\n%lx", 
         pinetimecos.batteryVoltage / 1000, 
         pinetimecos.batteryVoltage % 1000 / 10, 
         pinetimecos.batteryPercentRemaining, 
         mon.used_pct, mon.frag_pct,
         pinetimecos.debug,
         pinetimecos.resetReason,
-        tsData.gesture, tsData.event
+        tsData.gesture, tsData.event,
+        pinetimecos.app_ram_base 
         );
 
     //vTaskStats( app );

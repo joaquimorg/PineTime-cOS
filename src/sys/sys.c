@@ -223,7 +223,7 @@ void sys_init(void) {
 
     nrf_ble_init();
 
-    UNUSED_VARIABLE(xTaskCreate(sys_task_function, "SYS", configMINIMAL_STACK_SIZE + 300, NULL, 2, (TaskHandle_t *) NULL));
+    UNUSED_VARIABLE(xTaskCreate(sys_task_function, "SYS", configMINIMAL_STACK_SIZE + 512, NULL, 2, (TaskHandle_t *) NULL));
     //UNUSED_VARIABLE(xTaskCreate(main_app, "APP", configMINIMAL_STACK_SIZE + 512, NULL, 2, (TaskHandle_t *) NULL));
    
 }

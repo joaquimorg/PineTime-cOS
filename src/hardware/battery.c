@@ -66,10 +66,9 @@ static void saadc_callback(nrf_drv_saadc_evt_t const * p_event) {
         APP_ERROR_CHECK(err_code);
 
         for (uint8_t i = 0; i < SAMPLES_IN_BUFFER; i++) {
-
-            adc_result += p_event->data.done.p_buffer[i];
+			adc_result += p_event->data.done.p_buffer[i];
         }
-        adc_result = adc_result / SAMPLES_IN_BUFFER;
+			adc_result = adc_result / SAMPLES_IN_BUFFER;
 
         // Voltage divider ratio
 		//(R26 + R35) / R35
@@ -79,18 +78,22 @@ static void saadc_callback(nrf_drv_saadc_evt_t const * p_event) {
 
         pinetimecos.batteryPercentRemaining = voltage_percentage((float)pinetimecos.batteryVoltage / 1000);
         
+        
     }
 }
 
+
+static void start_battery_adc(void);
+
 void battery_init(void) {
-   	ret_code_t err_code;
+
+    ret_code_t err_code;
     nrf_saadc_channel_config_t channel_config =
         NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE(BATTERY_VOL);
 
     err_code = nrf_drv_saadc_init(NULL, saadc_callback);
     APP_ERROR_CHECK(err_code);
 
-    //channel_config.burst = NRF_SAADC_BURST_ENABLED;
     err_code = nrf_drv_saadc_channel_init(0, &channel_config);
     APP_ERROR_CHECK(err_code);
 
@@ -100,13 +103,20 @@ void battery_init(void) {
     err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[1], SAMPLES_IN_BUFFER);
     APP_ERROR_CHECK(err_code);
 
+    //err_code = nrf_drv_saadc_calibrate_offset();
+    //APP_ERROR_CHECK(err_code);
+
+    //err_code = nrf_drv_saadc_sample();
+    //APP_ERROR_CHECK(err_code);
+
 }
 
+
 void battery_read(void) {
-
-    ret_code_t err_code = nrf_drv_saadc_sample();
-    APP_ERROR_CHECK(err_code);
-
+    if (!nrf_drv_saadc_is_busy()) {
+        ret_code_t err_code = nrf_drv_saadc_sample();
+        APP_ERROR_CHECK(err_code);
+    }
 }
 
 char * battery_get_icon(void) {
