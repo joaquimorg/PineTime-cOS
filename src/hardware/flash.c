@@ -106,3 +106,19 @@ void spiflash_init() {
     nrf_gpio_cfg_output(FLASH_CSN);
     nrf_gpio_pin_write(FLASH_CSN, 1);
 }
+
+void spiflash_sleep() {
+    nrf_gpio_pin_write(FLASH_CSN, 0);
+    spi_write_byte(FLASH_DPD);
+    nrf_gpio_pin_write(FLASH_CSN, 1);
+}
+
+void spiflash_wakeup() {
+    nrf_gpio_pin_write(FLASH_CSN, 0);
+
+    uint8_t data[4] = {FLASH_RDPD, 0x01, 0x02, 0x03};    
+    spi_write(data, 4);
+    spi_read(data, 3);
+
+    nrf_gpio_pin_write(FLASH_CSN, 1);
+}

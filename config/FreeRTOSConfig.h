@@ -103,13 +103,12 @@
 
 /* Tickless idle/low power functionality. */
 
-/* Fix for Errata #87 nrf52832 */                                       \
+/* Fix for Errata #87 nrf52832 */
 #define configPRE_SLEEP_PROCESSING(xMIdleTime) if ( xMIdleTime > 0 ) {  \
         __set_FPSCR(__get_FPSCR() & ~(0x0000009F));                     \
         (void) __get_FPSCR();                                           \
          NVIC_ClearPendingIRQ(FPU_IRQn);                                \
 }
-
 
 /* Define to trap errors during development. */
 #if defined(DEBUG_NRF) || defined(DEBUG_NRF_USER)

@@ -24,7 +24,7 @@ static void on_error( uint8_t err ) {
     //NVIC_SystemReset();    
     
     st7789_vertical_scroll_definition(0, 320, 0, 0);
-    draw_square(0, 0, 239, 239, RGB2COLOR(0xa0, 0xa0, 0xa0));
+    draw_square(0, 0, 239, 239, RGB2COLOR(0x60, 0x00, 0x00));
 
     for (;;)
     {
@@ -47,21 +47,21 @@ static void on_error( uint8_t err ) {
 
 void assert_nrf_callback(uint16_t line_num, const uint8_t* p_file_name) {
     //NRF_LOG_ERROR("%s:%d", p_file_name, line_num);
-    NRF_BREAKPOINT_COND;
+    //NRF_BREAKPOINT_COND;
     on_error(1);
 }
 
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name) {
     //NRF_LOG_ERROR("%s:%d", p_file_name, line_num);
     //pinetimecos.debug = error_code;
-    NRF_BREAKPOINT_COND;
+    //NRF_BREAKPOINT_COND;
     on_error(2);
 }
 
 
 void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info) {
     //NRF_LOG_ERROR("Received a fault! id: 0x%08x, pc: 0x%08x, info: 0x%08x", id, pc, info);
-    NRF_BREAKPOINT_COND;
+    //NRF_BREAKPOINT_COND;
     on_error(3);
 }
 
@@ -72,7 +72,7 @@ void app_error_handler_bare(uint32_t error_code) {
     //NRF_LOG_ERROR("Received an error: 0x%08x!", error_code);
     pinetimecos.debug = error_code;
     //on_error(error_code);
-    NRF_BREAKPOINT_COND;
+    //NRF_BREAKPOINT_COND;
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -111,10 +111,7 @@ void vApplicationTickHook(void) {
 
 int main(void) {
 
-    ret_code_t ret;
-
-    NVIC_SetPriority(FPU_IRQn, APP_IRQ_PRIORITY_LOW);
-    NVIC_EnableIRQ(FPU_IRQn);
+    //ret_code_t ret;
 
     // WDT problems on init from bootloader
     //NRF_WDT->RR[0] = WDT_RR_RR_Reload;
@@ -122,8 +119,8 @@ int main(void) {
 
     i2c_clean_up();
     
-    ret = nrf_drv_power_init(NULL);
-    APP_ERROR_CHECK(ret);
+    //ret = nrf_drv_power_init(NULL);
+    //APP_ERROR_CHECK(ret);
 
     //log_init();
     clock_init();

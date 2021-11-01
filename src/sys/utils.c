@@ -15,6 +15,7 @@
 #include "rtc.h"
 #include "backlight.h"
 #include "st7789.h"
+#include "flash.h"
 
 
 void display_off(void) {
@@ -22,15 +23,17 @@ void display_off(void) {
     xTimerStop(idleTimer, 0);
     set_backlight_level(0);    
     st7789_sleep();
-    sd_power_mode_set(NRF_POWER_MODE_LOWPWR);
+    spiflash_sleep();
+    //sd_power_mode_set(NRF_POWER_MODE_LOWPWR);
 }
 
-void display_on(void) {
+void display_on(void) {    
     xTimerStart(idleTimer, 0);
     st7789_wake_up();
+    spiflash_wakeup();
     pinetimecos.state = Running;
     set_backlight_level(pinetimecos.backlightLevel);
-    sd_power_mode_set(NRF_POWER_MODE_CONSTLAT);
+    //sd_power_mode_set(NRF_POWER_MODE_CONSTLAT);
 }
 
 

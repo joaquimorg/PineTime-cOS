@@ -21,17 +21,6 @@ MEMORY
 SECTIONS
 {
   . = ALIGN(4);
-  .uicr_bootloader_start_address :
-  {
-    PROVIDE(__start_uicr_bootloader_start_address = .);
-    KEEP(*(SORT(.uicr_bootloader_start_address*)))
-    PROVIDE(__stop_uicr_bootloader_start_address = .);
-  } > uicr_bootloader_start_address
-}
-
-SECTIONS
-{
-  . = ALIGN(4);
   .mem_section_dummy_ram :
   {
   }
